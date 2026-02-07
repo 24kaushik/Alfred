@@ -1,0 +1,20 @@
+{
+  "name": "alfred",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Alfred is an AI assistant for students (Quantum University's students for now) that integrates fully with their campus life and helps students perform better and manage their life easily.",
+  "scripts": {
+    "dev:frontend": "pnpm --filter @alfred/frontend dev",
+    "dev": "pnpm -r dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/24kaushik/Alfred.git"
+  },
+  "author": "Kaushik Sarkar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/24kaushik/Alfred/issues"
+  },
+  "homepage": "https://github.com/24kaushik/Alfred#readme"
+}
