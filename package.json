@@ -5,6 +5,7 @@
   "description": "Alfred is an AI assistant for students (Quantum University's students for now) that integrates fully with their campus life and helps students perform better and manage their life easily.",
   "scripts": {
     "dev:frontend": "pnpm --filter @alfred/frontend dev",
+    "dev:api": "pnpm --filter @alfred/api dev",
     "dev": "pnpm -r dev"
   },
   "repository": {
@@ -16,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/24kaushik/Alfred/issues"
   },
-  "homepage": "https://github.com/24kaushik/Alfred#readme"
+  "homepage": "https://github.com/24kaushik/Alfred#readme",
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
 }
