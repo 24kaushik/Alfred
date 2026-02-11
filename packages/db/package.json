@@ -14,8 +14,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
-    "@prisma/client": "^6.19.2",
-    "dotenv": "^17.2.4"
+    "@prisma/client": "^6.19.2"
   },
   "devDependencies": {
     "prisma": "^6.19.2",
