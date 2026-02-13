@@ -133,3 +133,8 @@ thumb
 sketch
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node,react
+
+
+
+# ignore tesseract trained data
+eng.traineddata
