@@ -13,10 +13,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
+
+// ============================ Models ============================
+
+
+// Student Model
+
+model Student {
+  id    String @id @default(uuid())
+  name  String
+  email String @unique
+
+  qid               String? @unique
+  encryptedPassword String? // ERP password. The app itself uses only oAuth for authentication.
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
