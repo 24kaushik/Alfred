@@ -6,6 +6,7 @@
   "scripts": {
     "dev:frontend": "pnpm --filter @alfred/frontend dev",
     "dev:api": "pnpm --filter @alfred/api dev",
+    "dev:erp-adapter": "pnpm --filter @alfred/erp-adapter dev",
     "dev": "pnpm -r dev"
   },
   "repository": {

@@ -1,21 +1,19 @@
 import express from "express";
 import type { Express } from "express";
-// import loginRouter from "./router/login.route";
-import {prisma} from "@alfred/db";
 import dotenv from "dotenv";
+import { loginService } from "./service/login.service";
 
 dotenv.config();
 
 const app: Express = express();
 
-// // Health check
-// app.get("/", (req, res) => {
-//   res.send("ERP adapter working!");
-// });
+// Health check
+app.get("/", (req, res) => {
+  res.send("ERP adapter working!");
+});
 
-// // Routes
-// app.use("/login", loginRouter);
-
+// Routes
+loginService("cee90619-e393-484b-ae7e-ecb100c2bee1");
 
 
 export default app;
