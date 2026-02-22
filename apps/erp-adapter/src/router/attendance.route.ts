@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { body, param } from "express-validator";
-import { getMonthlyAttendance } from "../controller/attendance.controller";
+import {
+  getDailyAttendance,
+  getMonthlyAttendance,
+} from "../controller/attendance.controller";
 
 const attendanceRouter: Router = Router();
 
@@ -13,6 +16,12 @@ attendanceRouter.post(
     param("userID").isUUID().withMessage("Invalid user ID"),
   ],
   getMonthlyAttendance,
+);
+
+attendanceRouter.get(
+  "/daily/:userID",
+  [param("userID").isUUID().withMessage("Invalid user ID")],
+  getDailyAttendance,
 );
 
 export default attendanceRouter;

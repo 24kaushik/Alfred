@@ -87,3 +87,44 @@ export function structureAttendance(raw: any): StructuredData {
     subjects,
   };
 }
+
+interface NormalizedPeriod {
+  period: string;
+  time: string;
+  subject: {
+    code: string;
+    name: string;
+    teacher: string;
+  };
+  status: Status;
+}
+
+export function normalizeDailyAttendance(raw: any): NormalizedPeriod[] {
+  const parsed = JSON.parse(raw.state);
+
+  return parsed.map((entry: any): NormalizedPeriod => {
+    const {
+      Period,
+      Duration,
+      subject,
+      SubjectCode,
+      Employeename,
+      Attend,
+    } = entry;
+
+    let status: Status = "Not Marked";
+    if (Attend?.includes("P")) status = "Present";
+    else if (Attend?.includes("A")) status = "Absent";
+
+    return {
+      period: Period,
+      time: Duration,
+      subject: {
+        code: SubjectCode,
+        name: subject,
+        teacher: Employeename?.trim(),
+      },
+      status,
+    };
+  });
+}
