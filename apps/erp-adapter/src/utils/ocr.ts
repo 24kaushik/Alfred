@@ -1,6 +1,8 @@
 import { createWorker } from "tesseract.js";
 import type { Worker } from "tesseract.js";
 
+// TODO: USE TESSERACT BUILT IN SCHEDULERS
+
 const POOL_SIZE = process.env.TESSERACT_POOL_SIZE
   ? parseInt(process.env.TESSERACT_POOL_SIZE, 10)
   : 2;

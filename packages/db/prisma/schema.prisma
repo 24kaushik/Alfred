@@ -26,6 +26,7 @@ model Student {
 
   qid               String? @unique
   encryptedPassword String? // ERP password. The app itself uses only oAuth for authentication.
+  regID             String? 
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
