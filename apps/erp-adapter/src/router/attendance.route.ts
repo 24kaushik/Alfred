@@ -3,6 +3,7 @@ import { body, param } from "express-validator";
 import {
   getDailyAttendance,
   getMonthlyAttendance,
+  getSemAttendance,
 } from "../controller/attendance.controller";
 
 const attendanceRouter: Router = Router();
@@ -22,6 +23,12 @@ attendanceRouter.get(
   "/daily/:userID",
   [param("userID").isUUID().withMessage("Invalid user ID")],
   getDailyAttendance,
+);
+
+attendanceRouter.get(
+  "/sem/:userID",
+  [param("userID").isUUID().withMessage("Invalid user ID")],
+  getSemAttendance,
 );
 
 export default attendanceRouter;

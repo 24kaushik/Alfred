@@ -128,3 +128,59 @@ export function normalizeDailyAttendance(raw: any): NormalizedPeriod[] {
     };
   });
 }
+
+type AttendanceSummary = {
+  from: string;
+  to: string;
+  total: number;
+  present: number;
+  absent: number;
+  leave: number;
+  percentage: number;
+};
+
+type SubjectSummary = {
+  id: number;
+  code: string;
+  name: string;
+  credits: number;
+  total: number;
+  present: number;
+  absent: number;
+  leave: number;
+  percentage: number;
+};
+
+type NormalizedAttendance = {
+  summary: AttendanceSummary;
+  subjects: SubjectSummary[];
+};
+
+export function normalizeSemWiseAttendance(raw: any): NormalizedAttendance {
+  const state = JSON.parse(raw.state)[0];
+  const subjectsRaw = JSON.parse(raw.data);
+
+  const summary: AttendanceSummary = {
+    from: state.DateFrom,
+    to: state.DateTo,
+    total: Number(state.TotalLecture),
+    present: Number(state.TotalPresent),
+    absent: Number(state.TotalAbsent),
+    leave: Number(state.TotalLeave),
+    percentage: Number(state.TotalPercentage),
+  };
+
+  const subjects: SubjectSummary[] = subjectsRaw.map((s: any) => ({
+    id: Number(s.SubjectID),
+    code: s.SubjectCode.trim(),
+    name: s.Subject,
+    credits: Number(s.SubjectCredit),
+    total: Number(s.TotalLecture),
+    present: Number(s.TotalPresent),
+    absent: Number(s.TotalAbsent),
+    leave: Number(s.TotalLeave),
+    percentage: Number(s.Percentage),
+  }));
+
+  return { summary, subjects };
+}
