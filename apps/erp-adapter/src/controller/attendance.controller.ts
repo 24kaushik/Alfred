@@ -5,12 +5,12 @@ import { RequestHandler } from "express";
 import { prisma } from "../config/db.config";
 import { UUID } from "node:crypto";
 import qumsClient from "../config/axios.config";
+import { getCookies } from "../utils/getCookies";
 import {
   normalizeDailyAttendance,
   normalizeSemWiseAttendance,
   structureAttendance,
 } from "../normalizer/attendance.normalizer";
-import { getCookies } from "../utils/getCookies";
 
 export const getMonthlyAttendance: RequestHandler = expressAsyncHandler(
   async (req, res) => {

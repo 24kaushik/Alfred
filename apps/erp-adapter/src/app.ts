@@ -18,17 +18,18 @@ app.get("/", (req, res) => {
 
 // Routes
 import attendanceRouter from "./router/attendance.route";
+import timetableRouter from "./router/timetable.route";
 app.use("/attendance", attendanceRouter);
+app.use("/timetable", timetableRouter);
 
 // temp testing login service
 // (async () => {
-  //   const userID = "cee90619-e393-484b-ae7e-ecb100c2bee1";
+//   const userID = "cee90619-e393-484b-ae7e-ecb100c2bee1";
 //   const cookies = await loginService(userID);
 //   if (cookies) {
 //     redisClient.set(`cookies:${userID}`, cookies, "EX", 60 * 60 * 24); // Store cookies in Redis with an expiration time of 24 hours
 //   }
 // })();
-
 
 // Error handling middleware
 import errorHandler from "./middleware/errorHandler.middleware";
