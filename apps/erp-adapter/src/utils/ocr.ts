@@ -35,11 +35,35 @@ const extractText = async (image: Buffer): Promise<string> => {
   return text;
 };
 
-export { extractText };
+// TODO: very messy, tidy it up
 
-// (async () => {
-//   const enhanced = await enhanceImage(arr);
-//   const worker = await createWorker('eng');
-//   const { data: { text } } = await worker.recognize(enhanced);
-//   console.log(text);
-// })();
+const hinglishWorkers: Worker[] = [];
+let isHinglishInit = false;
+
+const initHinglishWorker = async () => {
+  const worker = await createWorker(["eng", "hin"]);
+  for (let i = 0; i < POOL_SIZE; i++) {
+    hinglishWorkers.push(worker);
+  }
+  isHinglishInit = true;
+};
+
+const getHinglishWorker = (): Worker => {
+  const worker: Worker = hinglishWorkers.shift()!;
+  hinglishWorkers.push(worker);
+  return worker;
+};
+
+const extractHinglishText = async (file: Buffer): Promise<string> =>{
+  await initHinglishWorker();
+  const worker = getHinglishWorker();
+    const {
+    data: { text },
+  } = await worker.recognize(file);
+
+  return text;
+
+}
+
+export { extractText, extractHinglishText };
+

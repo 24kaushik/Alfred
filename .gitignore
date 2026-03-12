@@ -137,4 +137,4 @@ sketch
 
 
 # ignore tesseract trained data
-eng.traineddata
+*.traineddata
