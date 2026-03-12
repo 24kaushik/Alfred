@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const client = axios.create({
+const qumsClient = axios.create({
   baseURL: "https://qums.quantumuniversity.edu.in",
 });
 
-export default client;
+export default qumsClient;
