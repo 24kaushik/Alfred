@@ -7,7 +7,7 @@ export const getCookies = async (userID: UUID): Promise<string> => {
   if (!cookies) {
     cookies = await loginService(userID);
     if (cookies) {
-      redisClient.set(`cookies:${userID}`, cookies, "EX", 60 * 60 * 24); // Store cookies in Redis with an expiration time of 24 hours
+      redisClient.set(`cookies:${userID}`, cookies, "EX", 60 * 60 * 1); // Store cookies in Redis with an expiration time of 1 hours
     } else {
       throw new Error("Failed to retrieve cookies for user");
     }

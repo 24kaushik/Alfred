@@ -17,11 +17,13 @@ import attendanceRouter from "./router/attendance.route";
 import timetableRouter from "./router/timetable.route";
 import circularRouter from "./router/circular.route";
 import generalRouter from "./router/general.route";
+import syllabusRouter from "./router/syllabus.route";
 
 app.use("/attendance", attendanceRouter);
 app.use("/timetable", timetableRouter);
 app.use("/circular", circularRouter);
 app.use("/general", generalRouter);
+app.use("/syllabus", syllabusRouter);
 
 // Error handling middleware
 import errorHandler from "./middleware/errorHandler.middleware";
