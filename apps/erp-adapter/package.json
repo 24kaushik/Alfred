@@ -2,13 +2,13 @@
   "name": "@alfred/erp-adapter",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.ts",
   "scripts": {
     "dev": "tsx watch src/server.ts"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "packageManager": "pnpm@10.28.2",
   "dependencies": {
     "@alfred/db": "workspace:*",
