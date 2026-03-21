@@ -19,9 +19,7 @@ const getStudentDataLogic = async (studentId: UUID) => {
   }
 };
 
-const GetStudentDataToolSchema = z.object({
-  studentId: z.uuid(),
-});
+const GetStudentDataToolSchema = z.uuid();
 
 const GetStudentDataTool = tool(getStudentDataLogic, {
   name: "get_student_data",

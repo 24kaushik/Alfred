@@ -1,4 +1,6 @@
 import { ChatGroq } from "@langchain/groq";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const GPTOSS_120B = new ChatGroq({
   model: "openai/gpt-oss-120b",
