@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { tool } from "langchain";
 import { UUID } from "crypto";
-import erpClient from "../config/axios.config";
+import erpClient from "../../config/axios.config";
 
 const getStudentDataLogic = async (studentId: UUID) => {
   try {
