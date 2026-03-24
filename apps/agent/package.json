@@ -13,13 +13,17 @@
   "dependencies": {
     "@alfred/db": "workspace:*",
     "@alfred/redis": "workspace:*",
+    "@langchain/classic": "^1.0.24",
+    "@langchain/community": "^1.1.24",
     "@langchain/core": "^1.1.32",
     "@langchain/groq": "^1.1.5",
     "@langchain/langgraph": "^1.2.2",
+    "@langchain/qdrant": "^1.0.1",
     "axios": "^1.13.5",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "langchain": "^1.2.34",
+    "pdf-parse": "^1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
