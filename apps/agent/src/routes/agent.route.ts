@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { agentController } from "../controllers/agent.controller";
+import { agentController } from "../controller/agent.controller";
 import { body, query } from "express-validator";
 
 const agentRouter: Router = Router();

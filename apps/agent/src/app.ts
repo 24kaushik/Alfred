@@ -11,4 +11,9 @@ app.get("/", (_, res) => {
 import agentRouter from "./routes/agent.route";
 app.use("/agent", agentRouter);
 
+
+// Error handling middleware
+import errorHandler from "./middleware/errorHandler.middleware";
+app.use(errorHandler);
+
 export default app;
