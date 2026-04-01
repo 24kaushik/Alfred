@@ -97,8 +97,7 @@ export const getDailyAttendance: RequestHandler = expressAsyncHandler(
       "/Web_StudentAcademic/GetTodayAttendance",
       {
         RegID: regID,
-        // date: new Date().toLocaleDateString("en-GB"),
-        date: "21/02/2026",
+        date: new Date().toLocaleDateString("en-GB"),
       },
       {
         headers: {
