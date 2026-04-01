@@ -2,10 +2,11 @@ import { tool } from "langchain";
 import * as z from "zod";
 import erpClient from "../../config/axios.config";
 import { UUID } from "crypto";
+import { wrapToolWithUser } from "../../utils/wrapToolWithUser";
 
-const getAllSubjectsID = async (studentId: UUID) => {
+const getAllSubjectsID = async ({ userId }: { userId: UUID }) => {
   try {
-    const response = await erpClient.get(`/syllabus/${studentId}`);
+    const response = await erpClient.get(`/syllabus/${userId}`);
     if (response.status === 200) {
       return {
         msg: "Subject IDs fetched successfully",
@@ -17,29 +18,26 @@ const getAllSubjectsID = async (studentId: UUID) => {
       );
     }
   } catch (error) {
-    console.error(`Error fetching subject IDs for ID ${studentId}:`, error);
+    console.error(`Error fetching subject IDs for ID ${userId}:`, error);
     return { msg: "Failed to fetch subject IDs", data: {} };
   }
 };
 
-const GetAllSubjectsIDToolSchema = z.uuid();
-
-const GetAllSubjectsIDTool = tool(getAllSubjectsID, {
+const GetAllSubjectsIDTool = tool(wrapToolWithUser(getAllSubjectsID), {
   name: "get_all_subjects_id",
   description:
-    "Fetches all subject IDs from the ERP system using the student ID.",
-  schema: GetAllSubjectsIDToolSchema,
+    "Fetches all subject IDs from the ERP system.",
 });
 
 const getSyllabusLogic = async ({
-  studentId,
+  userId,
   subjectID,
 }: {
-  studentId: UUID;
+  userId: UUID;
   subjectID: string;
 }) => {
   try {
-    const response = await erpClient.post(`/syllabus/${studentId}`, {
+    const response = await erpClient.post(`/syllabus/${userId}`, {
       subjectID,
     });
     if (response.status === 200) {
@@ -54,7 +52,7 @@ const getSyllabusLogic = async ({
     }
   } catch (error) {
     console.error(
-      `Error fetching syllabus data for ID ${studentId} and subject ID ${subjectID}:`,
+      `Error fetching syllabus data for ID ${userId} and subject ID ${subjectID}:`,
       error,
     );
     return { msg: "Failed to fetch syllabus data", data: {} };
@@ -62,14 +60,13 @@ const getSyllabusLogic = async ({
 };
 
 const GetSyllabusToolSchema = z.object({
-  studentId: z.uuid(),
   subjectID: z.string(),
 });
 
-const GetSyllabusTool = tool(getSyllabusLogic, {
+const GetSyllabusTool = tool(wrapToolWithUser(getSyllabusLogic), {
   name: "get_syllabus",
   description:
-    "Fetches syllabus data from the ERP system using the student ID and subject ID. To get subject id, use GetAllSubjectsIDTool tool.",
+    "Fetches syllabus data from the ERP system using the subject ID. To get subject id, use GetAllSubjectsIDTool tool.",
   schema: GetSyllabusToolSchema,
 });
 

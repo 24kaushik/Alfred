@@ -17,12 +17,13 @@ export const agentController: RequestHandler = expressAsyncHandler(
 
     const { message } = req.body;
     let { chatId } = req.query as { chatId?: string };
+    const userId = "cee90619-e393-484b-ae7e-ecb100c2bee1"; // TODO TEMP
 
     // Create chat if doesn't exist
     if (!chatId) {
       const chat = await prisma.chat.create({
         data: {
-          studentId: "cee90619-e393-484b-ae7e-ecb100c2bee1", // TODO TEMP
+          studentId: userId,
         },
       });
       chatId = chat.id;
@@ -33,9 +34,10 @@ export const agentController: RequestHandler = expressAsyncHandler(
     const prevMessages = await getChatHistory(chatId as string);
     const allMessages = [...prevMessages, currMessage];
 
-    const agentResponse = await erpAgent.invoke({
-      messages: allMessages,
-    });
+    const agentResponse = await erpAgent.invoke(
+      { messages: allMessages },
+      { configurable: { userId } }, // TODO TEMP
+    );
 
     const agentReply =
       agentResponse.messages[agentResponse.messages.length - 1]?.content;

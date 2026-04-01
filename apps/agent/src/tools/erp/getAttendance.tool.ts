@@ -2,16 +2,17 @@ import { tool } from "langchain";
 import * as z from "zod";
 import erpClient from "../../config/axios.config";
 import { UUID } from "crypto";
+import { wrapToolWithUser } from "../../utils/wrapToolWithUser";
 
 const getMonthlyAttendanceLogic = async ({
-  studentId,
+  userId,
   month,
 }: {
-  studentId: UUID;
+  userId: UUID;
   month: number;
 }) => {
   try {
-    const response = await erpClient.post(`/attendance/monthly/${studentId}`, {
+    const response = await erpClient.post(`/attendance/monthly/${userId}`, {
       month,
     });
     if (response.status === 200) {
@@ -26,7 +27,7 @@ const getMonthlyAttendanceLogic = async ({
     }
   } catch (error) {
     console.error(
-      `Error fetching monthly attendance data for ID ${studentId}:`,
+      `Error fetching monthly attendance data for ID ${userId}:`,
       error,
     );
     return { msg: "Failed to fetch monthly attendance data", data: {} };
@@ -34,20 +35,22 @@ const getMonthlyAttendanceLogic = async ({
 };
 
 const GetMonthlyAttendanceToolSchema = z.object({
-  studentId: z.uuid(),
   month: z.number().min(1).max(12),
 });
 
-const GetMonthlyAttendanceTool = tool(getMonthlyAttendanceLogic, {
-  name: "get_monthly_attendance",
-  description:
-    "Fetches monthly attendance data from the ERP system using the student ID and month.",
-  schema: GetMonthlyAttendanceToolSchema,
-});
+const GetMonthlyAttendanceTool = tool(
+  wrapToolWithUser(getMonthlyAttendanceLogic),
+  {
+    name: "get_monthly_attendance",
+    description:
+      "Fetches monthly attendance data from the ERP system using month.",
+    schema: GetMonthlyAttendanceToolSchema,
+  },
+);
 
-const getDailyAttendanceLogic = async ({ studentId }: { studentId: UUID }) => {
+const getDailyAttendanceLogic = async ({ userId }: { userId: UUID }) => {
   try {
-    const response = await erpClient.get(`/attendance/daily/${studentId}`);
+    const response = await erpClient.get(`/attendance/daily/${userId}`);
     if (response.status === 200) {
       return {
         msg: "Daily attendance data fetched successfully",
@@ -60,31 +63,22 @@ const getDailyAttendanceLogic = async ({ studentId }: { studentId: UUID }) => {
     }
   } catch (error) {
     console.error(
-      `Error fetching daily attendance data for ID ${studentId}:`,
+      `Error fetching daily attendance data for ID ${userId}:`,
       error,
     );
     return { msg: "Failed to fetch daily attendance data", data: {} };
   }
 };
 
-const GetDailyAttendanceToolSchema = z.object({
-  studentId: z.uuid(),
-});
-
-const GetDailyAttendanceTool = tool(getDailyAttendanceLogic, {
+const GetDailyAttendanceTool = tool(wrapToolWithUser(getDailyAttendanceLogic), {
   name: "get_daily_attendance",
   description:
-    "Fetches daily attendance data from the ERP system using the student ID.",
-  schema: GetDailyAttendanceToolSchema,
+    "Fetches daily attendance data from the ERP system.",
 });
 
-const getSemesterAttendanceLogic = async ({
-  studentId,
-}: {
-  studentId: UUID;
-}) => {
+const getSemesterAttendanceLogic = async ({ userId }: { userId: UUID }) => {
   try {
-    const response = await erpClient.get(`/attendance/sem/${studentId}`);
+    const response = await erpClient.get(`/attendance/sem/${userId}`);
     if (response.status === 200) {
       return {
         msg: "Semester attendance data fetched successfully",
@@ -97,23 +91,21 @@ const getSemesterAttendanceLogic = async ({
     }
   } catch (error) {
     console.error(
-      `Error fetching semester attendance data for ID ${studentId}:`,
+      `Error fetching semester attendance data for ID ${userId}:`,
       error,
     );
     return { msg: "Failed to fetch semester attendance data", data: {} };
   }
 };
 
-const GetSemesterAttendanceToolSchema = z.object({
-  studentId: z.uuid(),
-});
-
-const GetSemesterAttendanceTool = tool(getSemesterAttendanceLogic, {
-  name: "get_semester_attendance",
-  description:
-    "Fetches semester attendance data from the ERP system using the student ID.",
-  schema: GetSemesterAttendanceToolSchema,
-});
+const GetSemesterAttendanceTool = tool(
+  wrapToolWithUser(getSemesterAttendanceLogic),
+  {
+    name: "get_semester_attendance",
+    description:
+      "Fetches semester attendance data from the ERP system.",
+  },
+);
 
 export {
   GetMonthlyAttendanceTool,

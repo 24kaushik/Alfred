@@ -2,6 +2,7 @@ import { tool } from "langchain";
 import * as z from "zod";
 import erpClient from "../../config/axios.config";
 import { UUID } from "crypto";
+import { wrapToolWithUser } from "../../utils/wrapToolWithUser";
 
 type DAY =
   | "monday"
@@ -13,14 +14,14 @@ type DAY =
   | "sunday";
 
 const getTimetableLogic = async ({
-  studentId,
+  userId,
   day,
 }: {
-  studentId: UUID;
+  userId: UUID;
   day: DAY;
 }) => {
   try {
-    const response = await erpClient.get(`/timetable/${studentId}?day=${day}`);
+    const response = await erpClient.get(`/timetable/${userId}?day=${day}`);
     if (response.status === 200) {
       return {
         msg: "Timetable data fetched successfully",
@@ -33,7 +34,7 @@ const getTimetableLogic = async ({
     }
   } catch (error) {
     console.error(
-      `Error fetching timetable data for ID ${studentId} and day ${day}:`,
+      `Error fetching timetable data for ID ${userId} and day ${day}:`,
       error,
     );
     return { msg: "Failed to fetch timetable data", data: {} };
@@ -41,7 +42,6 @@ const getTimetableLogic = async ({
 };
 
 const GetTimetableToolSchema = z.object({
-  studentId: z.uuid(),
   day: z.enum([
     "monday",
     "tuesday",
@@ -53,10 +53,10 @@ const GetTimetableToolSchema = z.object({
   ]),
 });
 
-const GetTimetableTool = tool(getTimetableLogic, {
+const GetTimetableTool = tool(wrapToolWithUser(getTimetableLogic), {
   name: "get_timetable",
   description:
-    "Fetches timetable data from the ERP system using the student ID and day of the week.",
+    "Fetches timetable data from the ERP system using day of the week.",
   schema: GetTimetableToolSchema,
 });
 

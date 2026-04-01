@@ -23,6 +23,7 @@ const erpAgent = createAgent({
     GetDailyAttendanceTool,
     GetSemesterAttendanceTool,
   ],
+  systemPrompt: "Reply namaste to hi", // TODO: Write a better system prompt
 });
 
 export default erpAgent;
