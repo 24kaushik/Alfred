@@ -1,14 +1,32 @@
-import type { Request, Response, RequestHandler } from "express";
-import { ApiResponse, ApiError } from "../utils/ApiClasses";
-import { validationResult } from "express-validator";
 import expressAsyncHandler from "express-async-handler";
-import { randomUUID } from "crypto";
-import erpAgent from "../agent/erp.agent";
-import { getChatHistory, saveChatHistory } from "../utils/chatHistoryManager";
+import { ApiError, ApiResponse } from "../utils/ApiClasses";
+import { validationResult } from "express-validator";
+import { ingestQuestionPapers } from "../tools/rag/qp.tool";
+import { RequestHandler } from "express";
 import { prisma } from "../config/db.config";
+import { getChatHistory, saveChatHistory } from "../utils/chatHistoryManager";
+import StudyHelpAgent from "../agent/rag.agent";
 
-export const agentController: RequestHandler = expressAsyncHandler(
-  async (req: Request, res: Response) => {
+export const updateQP: RequestHandler = expressAsyncHandler(
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ApiError(400, "Validation Error", errors.array());
+    }
+
+    const { auth } = req.headers;
+    if (!auth || auth !== process.env.AUTH_SECRET) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    await ingestQuestionPapers();
+
+    res.json(new ApiResponse(200, "Question papers updated successfully"));
+  },
+);
+
+export const studyAgentController: RequestHandler = expressAsyncHandler(
+  async (req, res) => {
     // Validate request body
     const validationResults = validationResult(req);
     if (!validationResults.isEmpty()) {
@@ -34,7 +52,7 @@ export const agentController: RequestHandler = expressAsyncHandler(
     const prevMessages = await getChatHistory(chatId as string);
     const allMessages = [...prevMessages, currMessage];
 
-    const agentResponse = await erpAgent.invoke(
+    const agentResponse = await StudyHelpAgent.invoke(
       { messages: allMessages },
       { configurable: { userId } },
     );
@@ -62,15 +80,12 @@ export const agentController: RequestHandler = expressAsyncHandler(
           },
         ],
       })
-      .catch((err) => console.error("Failed to save messages to DB:", err));
+      .catch((err) => {
+        console.error("Failed to save chat history:", err);
+      });
     allMessages.push({ role: "ai", content: agentReply });
     await saveChatHistory(chatId as string, allMessages);
 
-    res.json(
-      new ApiResponse(200, "Agent response generated successfully", {
-        chatId,
-        reply: agentReply,
-      }),
-    );
+    res.json(new ApiResponse(200, "Success", { reply: agentReply, chatId }));
   },
 );

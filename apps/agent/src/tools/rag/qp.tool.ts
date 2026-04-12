@@ -1,7 +1,10 @@
 import * as z from "zod";
 import { tool } from "langchain";
-import { loadQuestionPapers } from "../utils/pdfLoader";
-import { addQuestionPapers, searchQuestionPapers } from "../utils/qpVectorStore";
+import { loadQuestionPapers } from "../../utils/pdfLoader";
+import {
+  addQuestionPapers,
+  searchQuestionPapers,
+} from "../../vector/qpVectorStore";
 
 export const ingestQuestionPapers = async () => {
   const questionPapers = await loadQuestionPapers();

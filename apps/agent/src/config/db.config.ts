@@ -8,6 +8,7 @@ export const redisClient: Redis = createRedisClient();
 
 let vectorStoreQP: QdrantVectorStore | null = null;
 let vectorStoreCirculars: QdrantVectorStore | null = null;
+let vectorStoreChat: QdrantVectorStore | null = null;
 
 export async function initVectorStores() {
   if (!vectorStoreQP) {
@@ -29,15 +30,26 @@ export async function initVectorStores() {
       },
     );
   }
+
+  if (!vectorStoreChat) {
+    vectorStoreChat = await QdrantVectorStore.fromExistingCollection(
+      embeddingModel,
+      {
+        url: process.env.QDRANT_URL || "http://localhost:6333",
+        collectionName: "chat",
+      },
+    );
+  }
 }
 
 export async function getVectorStores() {
-  if (!vectorStoreQP || !vectorStoreCirculars) {
+  if (!vectorStoreQP || !vectorStoreCirculars || !vectorStoreChat) {
     await initVectorStores();
   }
 
   return {
     vectorStoreQP: vectorStoreQP!,
     vectorStoreCirculars: vectorStoreCirculars!,
+    vectorStoreChat: vectorStoreChat!,
   };
 }

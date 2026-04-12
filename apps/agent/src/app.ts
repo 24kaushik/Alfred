@@ -17,3 +17,6 @@ import errorHandler from "./middleware/errorHandler.middleware";
 app.use(errorHandler);
 
 export default app;
+
+
+// TODO: Circulars RAG remaining

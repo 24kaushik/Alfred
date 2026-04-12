@@ -1,6 +1,6 @@
 import { createAgent, SystemMessage } from "langchain";
 import { GPTOSS_120B } from "../config/models.config";
-import RetrieveQuestionPapersTool from "../tools/rag.tool";
+import RetrieveQuestionPapersTool from "../tools/rag/qp.tool";
 import {
   GetAllSubjectsIDTool,
   GetSyllabusTool,
