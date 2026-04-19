@@ -34,6 +34,7 @@ export const agentController: RequestHandler = expressAsyncHandler(
     const prevMessages = await getChatHistory(chatId as string);
     const allMessages = [...prevMessages, currMessage];
 
+    // TODO: Stream response (https://docs.langchain.com/oss/javascript/langchain/streaming#llm-tokens)
     const agentResponse = await erpAgent.invoke(
       { messages: allMessages },
       { configurable: { userId } },
