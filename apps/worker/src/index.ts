@@ -1,8 +1,7 @@
 import { Worker } from "bullmq";
 import connection from "./redis";
 import dotenv from "dotenv";
-import { get } from "node:http";
-import getAiResponseAndStream from "./handler";
+import getAiResponseAndPublish from "./handler";
 
 dotenv.config();
 
@@ -12,7 +11,7 @@ const worker = new Worker(
     if (!job.data.message || !job.data.chatId) {
       return;
     }
-    getAiResponseAndStream(job.data.message, job.data.chatId);
+    getAiResponseAndPublish(job.data.message, job.data.chatId);
   },
   { connection },
 );
