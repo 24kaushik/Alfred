@@ -13,7 +13,7 @@ const worker = new Worker(
     }
     getAiResponseAndPublish(job.data.message, job.data.chatId);
   },
-  { connection },
+  { connection, concurrency: 1 }, // Process one job at a time due to current AI server limitations. Increase if better ai servers are available in the future.
 );
 
 worker.on("completed", (job) => {
