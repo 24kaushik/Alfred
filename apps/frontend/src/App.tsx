@@ -1,35 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { useEffect } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const login = useGoogleLogin({
+    flow: "auth-code", // IMPORTANT
+    onSuccess: async (codeResponse) => {
+      console.log("CODE:", codeResponse.code);
+
+      try {
+        const res = await axios.post(
+          "http://localhost:6969/api/v1/auth/google", // your backend
+          { code: codeResponse.code },
+          { withCredentials: true },
+        );
+
+        console.log("BACKEND RESPONSE:", res.data);
+      } catch (err) {
+        console.error("Backend error:", err);
+      }
+    },
+    onError: () => {
+      console.log("Login Failed");
+    },
+  });
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:6969/", { withCredentials: true })
+      .then((res) => {
+        console.log("Check Auth Response:", res.data);
+      })
+      .catch((err) => {
+        console.error("Check Auth Error:", err);
+      });
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div style={{ padding: 50 }}>
+      <button onClick={() => login()}>Login with Google</button>
+    </div>
+  );
 }
-
-export default App
