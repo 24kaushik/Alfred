@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import "./types/express.interface"; // Import custom type definitions for Express
 
 // Basic setup
 const app: express.Application = express();
@@ -18,7 +19,9 @@ app.get("/", (_, res) => res.send("Alfred api server is running"));
 
 // Routes
 import authRouter from "./router/auth.route";
+import userRouter from "./router/user.route";
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/user", userRouter);
 
 // Error handling
 import errorHandler from "./middleware/errorHandler.middleware";
