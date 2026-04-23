@@ -17,7 +17,7 @@ export const agentController: RequestHandler = expressAsyncHandler(
 
     const { message } = req.body;
     let { chatId } = req.query as { chatId?: string };
-    const userId = "cee90619-e393-484b-ae7e-ecb100c2bee1"; // TODO TEMP
+    const { userId } = req.body as { userId: string }; // TODO TEMP
 
     // Create chat if doesn't exist
     if (!chatId) {

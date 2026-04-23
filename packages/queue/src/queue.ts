@@ -10,9 +10,13 @@ export const AI_QUEUE = new Queue("ai-queue", {
 export const addToAIQueue = async ({
   message,
   chatId,
+  userId,
+  reqId,
 }: {
   message: string;
-  chatId: string;
+  chatId?: string;
+  userId: string;
+  reqId: string;
 }) => {
-  await AI_QUEUE.add("job", { message, chatId });
+  await AI_QUEUE.add("job", { message, chatId, userId, reqId });
 };
