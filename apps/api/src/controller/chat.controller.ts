@@ -74,7 +74,7 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
       throw new ApiError(401, "Unauthorized");
     }
 
-    const { chatId } = req.params;
+    let { chatId } = req.params;
     const { message } = req.body as { message: string };
 
     if (chatId && typeof chatId === "string") {
@@ -88,12 +88,19 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
       if (!chat) {
         throw new ApiError(404, "Chat not found");
       }
+    } else {
+      // Create new chat
+      const newChat = await prisma.chat.create({
+        data: {
+          studentId: req.user.id,
+        },
+      });
+      chatId = newChat.id;
     }
 
     const reqId = crypto.randomUUID();
-console.log("here")
     let newMessage = "";
-         AI_QUEUE.add("job", {
+    AI_QUEUE.add("job", {
       message,
       chatId,
       userId: req.user.id,
@@ -125,8 +132,6 @@ console.log("here")
         reject(new Error("Timeout"));
       }, 30000);
     });
-
-
 
     res.status(200).json(
       new ApiResponse(200, "Message sent successfully", {

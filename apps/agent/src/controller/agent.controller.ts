@@ -16,22 +16,13 @@ export const agentController: RequestHandler = expressAsyncHandler(
     }
 
     const { message } = req.body;
-    let { chatId } = req.query as { chatId?: string };
+    let { chatId } = req.query as { chatId: string };
     const { userId } = req.body as { userId: string }; // TODO TEMP
 
-    // Create chat if doesn't exist
-    if (!chatId) {
-      const chat = await prisma.chat.create({
-        data: {
-          studentId: userId,
-        },
-      });
-      chatId = chat.id;
-    }
 
     // Prepare messages
     const currMessage = { role: "user", content: message };
-    const prevMessages = await getChatHistory(chatId as string);
+    const prevMessages = await getChatHistory(chatId);
     const allMessages = [...prevMessages, currMessage];
 
     // TODO: Stream response (https://docs.langchain.com/oss/javascript/langchain/streaming#llm-tokens)
@@ -65,7 +56,7 @@ export const agentController: RequestHandler = expressAsyncHandler(
       })
       .catch((err) => console.error("Failed to save messages to DB:", err));
     allMessages.push({ role: "ai", content: agentReply });
-    await saveChatHistory(chatId as string, allMessages);
+    await saveChatHistory(chatId, allMessages);
 
     res.json(
       new ApiResponse(200, "Agent response generated successfully", {

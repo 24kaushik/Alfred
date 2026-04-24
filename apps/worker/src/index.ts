@@ -8,7 +8,6 @@ dotenv.config();
 const worker = new Worker(
   "ai-queue",
   async (job) => {
-    console.log(job)
     if (!job.data.message || !job.data.reqId || !job.data.userId) {
       if (job.data.reqId) {
         await connection.publish(job.data.reqId, "END");

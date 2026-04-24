@@ -11,7 +11,6 @@ agentRouter.post(
     body("message").isString().withMessage("Message must be a string"),
     body("userId").isUUID().withMessage("User ID must be a valid UUID"), 
     query("chatId")
-      .optional()
       .isUUID()
       .withMessage("Chat ID must be a valid UUID"),
   ],
