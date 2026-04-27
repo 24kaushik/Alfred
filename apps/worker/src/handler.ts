@@ -30,6 +30,19 @@ const getAiResponseAndPublish = async ({
   connection.publish(reqId, JSON.stringify(response.data));
 };
 
+const processFile = async ({
+  fileUrl,
+  chatId,
+}: {
+  fileUrl: string;
+  chatId: string;
+}) => {
+  const response = await axios.post(`${process.env.AGENT_URL}/file/process`, {
+    fileUrl,
+    chatId,
+  });
 
+  return response.data;
+};
 
-export { getAiResponseAndPublish };
+export { getAiResponseAndPublish, processFile };
