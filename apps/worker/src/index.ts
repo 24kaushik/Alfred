@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import connection from "./redis";
 import dotenv from "dotenv";
-import getAiResponseAndPublish from "./handler";
+import {getAiResponseAndPublish} from "./handler";
 
 dotenv.config();
 
@@ -24,6 +24,8 @@ const worker = new Worker(
   },
   { connection, concurrency: 1 }, // Process one job at a time due to current AI server limitations. Increase if better ai servers are available in the future.
 );
+
+// TODO: add file processing worker 
 
 worker.on("completed", (job) => {
   console.log(`${job.id} has completed!`);

@@ -30,4 +30,6 @@ const getAiResponseAndPublish = async ({
   connection.publish(reqId, JSON.stringify(response.data));
 };
 
-export default getAiResponseAndPublish;
+
+
+export { getAiResponseAndPublish };

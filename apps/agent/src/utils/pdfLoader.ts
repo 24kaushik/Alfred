@@ -15,3 +15,11 @@ export const loadQuestionPapers = async () => {
   const docs = await directoryLoader.load();
   return docs;
 };
+
+export const loadFileFromTmp = async (filePath: string) => {
+  const loader = new PDFLoader(filePath, {
+    splitPages: true,
+  });
+  const docs = await loader.load();
+  return docs;
+};

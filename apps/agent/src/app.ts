@@ -9,14 +9,14 @@ app.get("/", (_, res) => {
 });
 
 import agentRouter from "./routes/agent.route";
+import fileRouter from "./routes/file.route";
 app.use("/agent", agentRouter);
-
+app.use("/file", fileRouter);
 
 // Error handling middleware
 import errorHandler from "./middleware/errorHandler.middleware";
 app.use(errorHandler);
 
 export default app;
-
 
 // TODO: Circulars RAG remaining
