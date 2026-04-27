@@ -77,6 +77,7 @@ const fileStatus: RequestHandler = expressAsyncHandler(async (req, res) => {
   }
   const { filePath } = req.query;
   const status = await redisClient.get(filePath as string);
+  console.log(status)
   if (!status) {
     throw new ApiError(404, "File not found");
   }

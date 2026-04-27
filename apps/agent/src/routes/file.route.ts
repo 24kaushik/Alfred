@@ -5,7 +5,7 @@ import {
   processFile,
   fileStatus,
 } from "../controller/file.controller";
-import { body } from "express-validator";
+import { body, query } from "express-validator";
 
 const fileRouter: Router = Router();
 
@@ -22,9 +22,9 @@ fileRouter.post(
   processFile,
 );
 
-fileRouter.post(
+fileRouter.get(
   "/status",
-  [body("filePath").isString().trim().exists()],
+  [query("filePath").isString().trim().exists()],
   fileStatus,
 );
 
