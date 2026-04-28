@@ -10,7 +10,7 @@ const worker = new Worker(
   async (job) => {
     if (!job.data.message || !job.data.reqId || !job.data.userId) {
       if (job.data.reqId) {
-        await connection.publish(job.data.reqId, "END");
+        await connection.publish(job.data.reqId, "--![END]!--");
       }
       return;
     }
@@ -20,7 +20,6 @@ const worker = new Worker(
       userId: job.data.userId,
       reqId: job.data.reqId,
     });
-    await connection.publish(job.data.reqId, "END");
   },
   { connection, concurrency: 1 }, // Process one job at a time due to current AI server limitations. Increase if better ai servers are available in the future.
 );
@@ -32,6 +31,7 @@ const processFileWorker = new Worker(
       fileUrl: job.data.fileUrl,
       chatId: job.data.chatId,
     });
+    await connection.publish(job.data.reqId, "--![END]!--");
   },
   { connection, concurrency: 1 },
 );

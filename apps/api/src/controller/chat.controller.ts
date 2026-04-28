@@ -99,13 +99,18 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
     }
 
     const reqId = crypto.randomUUID();
-    let newMessage = "";
+    // let newMessage = "";
     AI_QUEUE.add("job", {
       message,
       chatId,
       userId: req.user.id,
       reqId,
     });
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
 
     await new Promise((resolve, reject) => {
       redisClient.subscribe(reqId, (err) => {
@@ -115,13 +120,26 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
       const listener = (channel: string, message: string) => {
         if (channel !== reqId) return;
 
-        if (message === "END") {
-          redisClient.unsubscribe(reqId);
-          redisClient.off("message", listener);
-          return resolve(true);
-        }
+        try {
+          const msg = JSON.parse(message);
 
-        newMessage += message;
+          if (msg.type === "error") {
+            redisClient.unsubscribe(reqId);
+            redisClient.off("message", listener);
+            return reject(
+              new Error(msg.data.message || "Unknown error from worker"),
+            );
+          } else if (msg.type === "token") {
+            res.write(msg.data);
+          } else if (msg.type === "end") {
+            redisClient.unsubscribe(reqId);
+            redisClient.off("message", listener);
+            return resolve(true);
+          }
+        } catch {
+          console.error("Failed to parse message:", message);
+          return;
+        }
       };
 
       redisClient.on("message", listener);
@@ -133,12 +151,7 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
       }, 30000);
     });
 
-    res.status(200).json(
-      new ApiResponse(200, "Message sent successfully", {
-        chatId,
-        reply: newMessage,
-      }),
-    );
+    res.end();
   },
 );
 

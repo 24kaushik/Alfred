@@ -2,7 +2,6 @@ import type { Request, Response, RequestHandler } from "express";
 import { ApiResponse, ApiError } from "../utils/ApiClasses";
 import { validationResult } from "express-validator";
 import expressAsyncHandler from "express-async-handler";
-import { randomUUID } from "crypto";
 import erpAgent from "../agent/erp.agent";
 import { getChatHistory, saveChatHistory } from "../utils/chatHistoryManager";
 import { prisma } from "../config/db.config";
@@ -17,22 +16,28 @@ export const agentController: RequestHandler = expressAsyncHandler(
 
     const { message } = req.body;
     let { chatId } = req.query as { chatId: string };
-    const { userId } = req.body as { userId: string }; // TODO TEMP
-
+    const { userId } = req.body as { userId: string };
 
     // Prepare messages
     const currMessage = { role: "user", content: message };
     const prevMessages = await getChatHistory(chatId);
     const allMessages = [...prevMessages, currMessage];
 
-    // TODO: Stream response (https://docs.langchain.com/oss/javascript/langchain/streaming#llm-tokens)
-    const agentResponse = await erpAgent.invoke(
-      { messages: allMessages },
-      { configurable: { userId } },
-    );
+    let agentReply = "";
 
-    const agentReply =
-      agentResponse.messages[agentResponse.messages.length - 1]?.content;
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    for await (const [token, metadata] of await erpAgent.stream(
+      { messages: allMessages },
+      { configurable: { userId }, streamMode: "messages" },
+    )) {
+      const tokenContent = token.contentBlocks[0]?.text || "";
+      res.write(tokenContent);
+      agentReply += tokenContent;
+    }
 
     if (!agentReply) {
       throw new ApiError(500, "Agent failed to generate a response");
@@ -57,12 +62,6 @@ export const agentController: RequestHandler = expressAsyncHandler(
       .catch((err) => console.error("Failed to save messages to DB:", err));
     allMessages.push({ role: "ai", content: agentReply });
     await saveChatHistory(chatId, allMessages);
-
-    res.json(
-      new ApiResponse(200, "Agent response generated successfully", {
-        chatId,
-        reply: agentReply,
-      }),
-    );
+    res.end();
   },
 );
