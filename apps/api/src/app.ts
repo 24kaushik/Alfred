@@ -27,6 +27,7 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/chat", chatRouter);
 
 
+
 // Error handling
 import errorHandler from "./middleware/errorHandler.middleware";
 app.use(errorHandler);

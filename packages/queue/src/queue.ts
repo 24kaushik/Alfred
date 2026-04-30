@@ -12,13 +12,15 @@ export const addToAIQueue = async ({
   chatId,
   userId,
   reqId,
+  type = "chat",
 }: {
   message: string;
   chatId?: string;
   userId: string;
   reqId: string;
+  type: "chat" | "studychat";
 }) => {
-  await AI_QUEUE.add("job", { message, chatId, userId, reqId });
+  await AI_QUEUE.add("job", { message, chatId, userId, reqId, type });
 };
 
 export const PROCESS_QUEUE = new Queue("process-queue", {

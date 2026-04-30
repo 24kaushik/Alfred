@@ -75,7 +75,10 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
     }
 
     let { chatId } = req.params;
-    const { message } = req.body as { message: string };
+    const { message, type } = req.body as {
+      message: string;
+      type: "chat" | "studychat";
+    };
 
     if (chatId && typeof chatId === "string") {
       const chat = await prisma.chat.findFirst({
@@ -105,6 +108,7 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
       chatId,
       userId: req.user.id,
       reqId,
+      type,
     });
 
     res.setHeader("Content-Type", "text/event-stream");

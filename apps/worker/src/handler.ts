@@ -16,16 +16,19 @@ const getAiResponseAndPublish = async ({
   chatId,
   userId,
   reqId,
+  type = "chat",
 }: {
   message: string;
   chatId?: string;
   userId: string;
   reqId: string;
+  type: "chat" | "studychat";
 }) => {
   try {
-    const url = chatId
-      ? `${process.env.AGENT_URL}/agent/general/chat?chatId=${chatId}`
-      : `${process.env.AGENT_URL}/agent/general/chat`;
+    const url =
+      type === "chat"
+        ? `${process.env.AGENT_URL}/agent/general/chat?chatId=${chatId}`
+        : `${process.env.AGENT_URL}/agent/study/chat?chatId=${chatId}`;
 
     const response = await axios.post(
       url,
