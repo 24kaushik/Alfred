@@ -34,31 +34,29 @@ export const studyAgentController: RequestHandler = expressAsyncHandler(
     }
 
     const { message } = req.body;
-    let { chatId } = req.query as { chatId?: string };
-    const userId = "cee90619-e393-484b-ae7e-ecb100c2bee1"; // TODO TEMP
-
-    // Create chat if doesn't exist
-    if (!chatId) {
-      const chat = await prisma.chat.create({
-        data: {
-          studentId: userId,
-        },
-      });
-      chatId = chat.id;
-    }
+    let { chatId } = req.query as { chatId: string };
+    const { userId } = req.body as { userId: string };
 
     // Prepare messages
     const currMessage = { role: "user", content: message };
-    const prevMessages = await getChatHistory(chatId as string);
+    const prevMessages = await getChatHistory(chatId);
     const allMessages = [...prevMessages, currMessage];
 
-    const agentResponse = await StudyHelpAgent.invoke(
-      { messages: allMessages },
-      { configurable: { userId } },
-    );
+    let agentReply = "";
 
-    const agentReply =
-      agentResponse.messages[agentResponse.messages.length - 1]?.content;
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    for await (const [token, metadata] of await StudyHelpAgent.stream(
+      { messages: allMessages },
+      { configurable: { userId }, streamMode: "messages" },
+    )) {
+      const tokenContent = token.contentBlocks[0]?.text || "";
+      res.write(tokenContent);
+      agentReply += tokenContent;
+    }
 
     if (!agentReply) {
       throw new ApiError(500, "Agent failed to generate a response");
@@ -81,11 +79,10 @@ export const studyAgentController: RequestHandler = expressAsyncHandler(
         ],
       })
       .catch((err) => {
-        console.error("Failed to save chat history:", err);
+        console.error("Failed to save messages to DB:", err);
       });
     allMessages.push({ role: "ai", content: agentReply });
-    await saveChatHistory(chatId as string, allMessages);
-
-    res.json(new ApiResponse(200, "Success", { reply: agentReply, chatId }));
+    await saveChatHistory(chatId, allMessages);
+    res.end();
   },
 );
