@@ -8,10 +8,26 @@ import {
 import { body, query } from "express-validator";
 
 const fileRouter: Router = Router();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "rag_data/tmp");
+  },
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const nameWithoutExt = file.originalname.split(".").slice(0, -1).join(".");
+    const ext = file.originalname.split(".").pop();
+    cb(null, `${nameWithoutExt}_${timestamp}.${ext}`);
+  },
+});
 
-const upload = multer({ dest: "rag_data/tmp" }); // only pdfs
+const upload = multer({ storage }); // only pdfs
 
-fileRouter.post("/upload", upload.single("file"), saveFile);
+fileRouter.post(
+  "/upload",
+  upload.single("file"),
+  [body("chatId").isString().trim().exists()],
+  saveFile,
+);
 
 fileRouter.post(
   "/process",

@@ -13,9 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 // ============================ Models ============================
-
 
 // Student Model
 
@@ -26,7 +24,7 @@ model Student {
 
   qid               String? @unique
   encryptedPassword String? // ERP password. The app itself uses only oAuth for authentication.
-  regID             String? 
+  regID             String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -37,10 +35,30 @@ model Student {
 // ChatModel
 
 model Chat {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   studentId String
-  student   Student  @relation(fields: [studentId], references: [id])
+  student   Student   @relation(fields: [studentId], references: [id])
   messages  Message[]
+  file      File[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// File Model
+enum FileStatus {
+  UPLOADED
+  PROCESSED
+  PROCESSING
+  ERROR
+}
+
+model File {
+  id       String     @id @default(uuid())
+  fileName String     @unique
+  chatId   String
+  chat     Chat       @relation(fields: [chatId], references: [id])
+  status   FileStatus @default(UPLOADED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -49,11 +67,11 @@ model Chat {
 // Message Model
 
 model Message {
-  id        String   @id @default(uuid())
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id])
-  sender    Sender
-  content   String
+  id      String @id @default(uuid())
+  chatId  String
+  chat    Chat   @relation(fields: [chatId], references: [id])
+  sender  Sender
+  content String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

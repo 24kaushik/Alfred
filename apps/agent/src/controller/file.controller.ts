@@ -10,6 +10,10 @@ import path from "path";
 
 const saveFile: RequestHandler = expressAsyncHandler(
   async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ApiError(400, "Invalid request", errors.array());
+    }
     // File will be saved in the uploads folder by multer middleware
     if (!req.file) {
       throw new ApiError(400, "No file uploaded");
@@ -19,6 +23,12 @@ const saveFile: RequestHandler = expressAsyncHandler(
     }
 
     await redisClient.set(req.file.path, "processing", "EX", 60 * 60); // expire in 1 hour
+    await prisma.file.create({
+      data: {
+        fileName: req.file.path,
+        chatId: req.body.chatId,
+      },
+    });
 
     res.status(200).json(
       new ApiResponse(200, "File uploaded successfully", {
@@ -35,7 +45,10 @@ const processFile: RequestHandler = expressAsyncHandler(
       throw new ApiError(400, "Invalid request", errors.array());
     }
 
-    const { filePath, chatId } = req.body;
+    const { filePath, chatId } = req.body as {
+      filePath: string;
+      chatId: string;
+    };
 
     const fileExists = await fs
       .access(filePath)
@@ -60,6 +73,14 @@ const processFile: RequestHandler = expressAsyncHandler(
 
     await addChatDocuments(docs, chatId);
     await fs.unlink(path.join(__dirname, "../../", filePath));
+    await prisma.file.update({
+      where: {
+        fileName: filePath,
+      },
+      data: {
+        status: "PROCESSED",
+      },
+    });
     await redisClient.set(filePath, "processed", "EX", 60 * 60); // expire in 1 hour
 
     res.status(200).json(
@@ -77,14 +98,30 @@ const fileStatus: RequestHandler = expressAsyncHandler(async (req, res) => {
   }
   const { filePath } = req.query;
   const status = await redisClient.get(filePath as string);
-  console.log(status)
-  if (!status) {
+  if (status) {
+    res.status(200).json(
+      new ApiResponse(200, "File status retrieved successfully", {
+        filePath,
+        status,
+      }),
+    );
+    return;
+  }
+
+  const fileRecord = await prisma.file.findFirst({
+    where: {
+      fileName: filePath as string,
+    },
+  });
+
+  if (!fileRecord) {
     throw new ApiError(404, "File not found");
   }
+
   res.status(200).json(
     new ApiResponse(200, "File status retrieved successfully", {
       filePath,
-      status,
+      status: fileRecord.status || "unknown",
     }),
   );
 });
