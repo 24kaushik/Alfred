@@ -3,8 +3,13 @@ import { prisma, redisClient } from "../config/db.config";
 import { ApiError, ApiResponse } from "../utils/ApiClasses";
 import { RequestHandler } from "express";
 import { validationResult } from "express-validator";
-import { AI_QUEUE } from "@alfred/queue";
-import { count } from "console";
+import { addToProcessQueue, AI_QUEUE, PROCESS_QUEUE } from "@alfred/queue";
+import axios from "axios";
+import fs from "fs";
+import FormData from "form-data";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const getAllUserChats: RequestHandler = expressAsyncHandler(
   async (req, res) => {
@@ -102,7 +107,7 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
     }
 
     const reqId = crypto.randomUUID();
-    // let newMessage = "";
+
     AI_QUEUE.add("job", {
       message,
       chatId,
@@ -114,6 +119,7 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
+
     res.flushHeaders();
 
     await new Promise((resolve, reject) => {
@@ -126,7 +132,7 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
 
         try {
           const msg = JSON.parse(message);
-
+          console.log(msg);
           if (msg.type === "error") {
             redisClient.unsubscribe(reqId);
             redisClient.off("message", listener);
@@ -134,7 +140,7 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
               new Error(msg.data.message || "Unknown error from worker"),
             );
           } else if (msg.type === "token") {
-            res.write(msg.data);
+            res.write(`data: ${msg.data}\n\n`);
           } else if (msg.type === "end") {
             redisClient.unsubscribe(reqId);
             redisClient.off("message", listener);
@@ -159,4 +165,96 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
   },
 );
 
-export { getAllUserChats, getChatMessages, sendChatMessage };
+const uploadFileToChat: RequestHandler = expressAsyncHandler(
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new ApiError(400, "Validation error", errors.array());
+    }
+
+    const { chatId } = req.params as { chatId: string };
+
+    const chat = await prisma.chat.findFirst({
+      where: { id: chatId, studentId: req.user?.id },
+    });
+    if (!chat) throw new ApiError(404, "Chat not found");
+
+    if (!req.file) {
+      throw new ApiError(400, "No file uploaded");
+    }
+
+    if (req.file.mimetype !== "application/pdf") {
+      throw new ApiError(400, "Only PDF files are allowed");
+    }
+
+    const formdata = new FormData();
+    formdata.append("file", fs.createReadStream(req.file.path));
+    formdata.append("chatId", chatId);
+    const request = await axios.post(
+      `${process.env.AGENT_URL}/file/upload/${chatId}`,
+      formdata,
+      {
+        headers: {
+          ...formdata.getHeaders(),
+        },
+      },
+    );
+
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error("Failed to delete file:", err);
+    });
+
+    if (
+      request.status !== 200 ||
+      !request.data ||
+      request.data.data?.filePath === undefined
+    ) {
+      throw new ApiError(
+        request.status,
+        request.statusText || "File upload failed",
+        request.data,
+      );
+    }
+
+    await addToProcessQueue({
+      filePath: request.data.data.filePath,
+      chatId,
+    });
+
+    res
+      .status(request.status)
+      .json(new ApiResponse(request.status, request.statusText, request.data));
+  },
+);
+
+const getFilesInChat: RequestHandler = expressAsyncHandler(async (req, res) => {
+  const { chatId } = req.params as { chatId: string };
+  const chat = await prisma.chat.findFirst({
+    where: {
+      id: chatId,
+      studentId: req.user?.id,
+    },
+  });
+
+  if (!chat) {
+    throw new ApiError(404, "Chat not found");
+  }
+
+  const files = await prisma.file.findMany({
+    where: {
+      chatId,
+    },
+  });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Files retrieved successfully", files));
+});
+
+export {
+  getAllUserChats,
+  getChatMessages,
+  sendChatMessage,
+  getFilesInChat,
+  uploadFileToChat,
+};

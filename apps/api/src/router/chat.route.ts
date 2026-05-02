@@ -2,10 +2,27 @@ import { Router } from "express";
 import {
   getAllUserChats,
   getChatMessages,
+  getFilesInChat,
   sendChatMessage,
+  uploadFileToChat,
 } from "../controller/chat.controller";
 import { userAuthMiddleware } from "../middleware/userAuth.middleware";
-import { body, query } from "express-validator";
+import { body, param, query } from "express-validator";
+import multer from "multer";
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (
+    req,
+    file,
+    cb, 
+  ) => {
+    cb(null, file.originalname);
+  },
+});
+const upload = multer({storage});
 
 const chatRouter: Router = Router();
 
@@ -14,17 +31,38 @@ chatRouter.use(userAuthMiddleware);
 chatRouter.get("/", getAllUserChats);
 chatRouter.get("/:chatId", getChatMessages);
 
-chatRouter.post("/:chatId",[
-  body("message").isString().withMessage("Message must be a string"),
-  body("type")
-    .isIn(["chat", "studychat"])
-    .withMessage("Type must be either 'chat' or 'studychat'"),
-], sendChatMessage);
-chatRouter.post("/", [
-  body("message").isString().withMessage("Message must be a string"),
-  body("type")
-    .isIn(["chat", "studychat"])
-    .withMessage("Type must be either 'chat' or 'studychat'"),
-], sendChatMessage); // also create a new chat if chatId is not provided
+chatRouter.post(
+  "/:chatId",
+  [
+    body("message").isString().withMessage("Message must be a string"),
+    body("type")
+      .isIn(["chat", "studychat"])
+      .withMessage("Type must be either 'chat' or 'studychat'"),
+  ],
+  sendChatMessage,
+);
+
+chatRouter.post(
+  "/",
+  [
+    body("message").isString().withMessage("Message must be a string"),
+    body("type")
+      .isIn(["chat", "studychat"])
+      .withMessage("Type must be either 'chat' or 'studychat'"),
+  ],
+  sendChatMessage,
+); // also create a new chat if chatId is not provided
+
+chatRouter.get(
+  "/files/:chatId",
+  [param("chatId").isUUID().withMessage("Invalid chat ID")],
+  getFilesInChat,
+);
+chatRouter.post(
+  "/upload/:chatId",
+  [param("chatId").isUUID().withMessage("Invalid chat ID")],
+  upload.single("file"),
+  uploadFileToChat,
+);
 
 export default chatRouter;

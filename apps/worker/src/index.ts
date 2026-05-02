@@ -19,6 +19,7 @@ const worker = new Worker(
       chatId: job.data.chatId,
       userId: job.data.userId,
       reqId: job.data.reqId,
+      type: job.data.type,
     });
   },
   { connection, concurrency: 1 }, // Process one job at a time due to current AI server limitations. Increase if better ai servers are available in the future.
@@ -28,7 +29,7 @@ const processFileWorker = new Worker(
   "process-queue",
   async (job) => {
     await processFile({
-      fileUrl: job.data.fileUrl,
+      filePath: job.data.filePath,
       chatId: job.data.chatId,
     });
     await connection.publish(job.data.reqId, "--![END]!--");

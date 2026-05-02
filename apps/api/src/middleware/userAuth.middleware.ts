@@ -13,7 +13,12 @@ export const userAuthMiddleware: RequestHandler = expressAsyncHandler(
       throw new ApiError(401, "Authentication token is missing");
     }
 
-    const user = await jwt.verify(authToken, process.env.JWT_SECRET!);
+    let user;
+    try {
+      user = await jwt.verify(authToken, process.env.JWT_SECRET!);
+    } catch (err) {
+      throw new ApiError(401, "Invalid authentication token");
+    }
 
     if (!user) {
       throw new ApiError(401, "Invalid authentication token");

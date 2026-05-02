@@ -113,17 +113,18 @@ const getAiResponseAndPublish = async ({
 };
 
 const processFile = async ({
-  fileUrl,
+  filePath,
   chatId,
 }: {
-  fileUrl: string;
+  filePath: string;
   chatId: string;
 }) => {
   const response = await axios.post(`${process.env.AGENT_URL}/file/process`, {
-    fileUrl,
+    filePath,
     chatId,
   });
-
+  console.log(filePath)
+  
   return response.data;
 };
 

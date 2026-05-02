@@ -14,6 +14,7 @@ const saveFile: RequestHandler = expressAsyncHandler(
     if (!errors.isEmpty()) {
       throw new ApiError(400, "Invalid request", errors.array());
     }
+    const { chatId } = req.params as { chatId: string };
     // File will be saved in the uploads folder by multer middleware
     if (!req.file) {
       throw new ApiError(400, "No file uploaded");
@@ -26,7 +27,7 @@ const saveFile: RequestHandler = expressAsyncHandler(
     await prisma.file.create({
       data: {
         fileName: req.file.path,
-        chatId: req.body.chatId,
+        chatId: chatId,
       },
     });
 

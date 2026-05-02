@@ -5,7 +5,7 @@ import {
   processFile,
   fileStatus,
 } from "../controller/file.controller";
-import { body, query } from "express-validator";
+import { body, param, query } from "express-validator";
 
 const fileRouter: Router = Router();
 const storage = multer.diskStorage({
@@ -23,9 +23,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage }); // only pdfs
 
 fileRouter.post(
-  "/upload",
+  "/upload/:chatId",
   upload.single("file"),
-  [body("chatId").isString().trim().exists()],
+  [param("chatId").isString().trim().exists()],
   saveFile,
 );
 

@@ -9,7 +9,7 @@
     "dev:erp-adapter": "pnpm --filter @alfred/erp-adapter dev",
     "dev:agent": "pnpm --filter @alfred/agent dev",
     "dev:worker": "pnpm --filter @alfred/worker dev",
-    "dev": "pnpm -r dev"
+    "dev": "pnpm -r --parallel --no-bail dev"
   },
   "repository": {
     "type": "git",

@@ -135,6 +135,7 @@ sketch
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node,react
 
 rag_data/
+uploads/
 
 # ignore tesseract trained data
 *.traineddata
