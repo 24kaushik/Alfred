@@ -34,9 +34,11 @@ export const agentController: RequestHandler = expressAsyncHandler(
       { messages: allMessages },
       { configurable: { userId }, streamMode: "messages" },
     )) {
+      if (metadata.langgraph_node !== "tools") {
       const tokenContent = token.contentBlocks[0]?.text || "";
       res.write(tokenContent);
       agentReply += tokenContent;
+      }
     }
 
     if (!agentReply) {

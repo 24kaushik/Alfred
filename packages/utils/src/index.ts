@@ -1,4 +1,7 @@
 import crypto from "crypto";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const algorithm: string = process.env.ENCRYPTION_ALGORITHM!;
 

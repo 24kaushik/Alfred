@@ -99,9 +99,9 @@ importers:
       '@alfred/redis':
         specifier: workspace:*
         version: link:../../packages/redis
-      '@types/multer':
-        specifier: ^2.1.0
-        version: 2.1.0
+      '@alfred/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       axios:
         specifier: ^1.13.5
         version: 1.13.5(debug@4.4.3)
@@ -154,6 +154,9 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
+      '@types/multer':
+        specifier: ^2.1.0
+        version: 2.1.0
       '@types/node':
         specifier: ^24.10.11
         version: 24.10.11
@@ -172,6 +175,9 @@ importers:
       '@alfred/redis':
         specifier: workspace:*
         version: link:../../packages/redis
+      '@alfred/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       axios:
         specifier: ^1.13.5
         version: 1.13.5(debug@4.4.3)
@@ -308,6 +314,16 @@ importers:
       ioredis:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/utils:
+    dependencies:
+      dotenv:
+        specifier: ^17.3.1
+        version: 17.3.1
+    devDependencies:
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
 
 packages:
 
@@ -4335,11 +4351,11 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 25.5.0
+      '@types/node': 25.6.0
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 25.6.0
 
   '@types/cookie-parser@1.4.10(@types/express@5.0.6)':
     dependencies:
@@ -4357,7 +4373,7 @@ snapshots:
 
   '@types/express-serve-static-core@5.1.1':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 25.6.0
       '@types/qs': 6.14.0
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -4385,7 +4401,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 25.6.0
       form-data: 4.0.5
 
   '@types/node@18.19.130':
@@ -4422,12 +4438,12 @@ snapshots:
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 25.6.0
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 25.5.0
+      '@types/node': 25.6.0
 
   '@types/tough-cookie@4.0.5': {}
 

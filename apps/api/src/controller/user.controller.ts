@@ -2,7 +2,7 @@ import expressAsyncHandler from "express-async-handler";
 import { validationResult } from "express-validator";
 import { ApiError } from "../utils/ApiClasses";
 import { RequestHandler } from "express";
-import { encrypt } from "../utils/encryption";
+import { encrypt } from "@alfred/utils";
 import { prisma } from "../config/db.config";
 
 const updateERPCredentials: RequestHandler = expressAsyncHandler(

@@ -4,6 +4,8 @@ import { ApiError } from "../utils/ApiClasses";
 import { enhanceImage } from "../utils/enhance";
 import { extractText } from "../utils/ocr";
 import client from "../config/axios.config";
+import { decrypt } from "@alfred/utils";
+
 
 export const loginService = async (userID: UUID): Promise<string | null> => {
   const user = await prisma.student.findUnique({
@@ -20,7 +22,11 @@ export const loginService = async (userID: UUID): Promise<string | null> => {
   }
 
   //TODO: decrypt the password
-  const decryptedPassword = user.encryptedPassword;
+  // const decryptedPassword = user.encryptedPassword;
+  const decryptedPassword = decrypt(
+    user.encryptedPassword as `${string}:${string}`,
+  );
+  console.log(decryptedPassword)
   // Replace with actual decryption logic
   // better yet, dont store it in memory at all, directly use it to login and then clear it from memory
 
