@@ -251,10 +251,31 @@ const getFilesInChat: RequestHandler = expressAsyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Files retrieved successfully", files));
 });
 
+const createNewChat: RequestHandler = expressAsyncHandler(async (req, res) => {
+  if (!req.user || !req.user.id) {
+    throw new ApiError(401, "Unauthorized");
+  }
+
+  const newChat = await prisma.chat.create({
+    data: {
+      studentId: req.user.id,
+    },
+  });
+
+  if (!newChat) {
+    throw new ApiError(500, "Failed to create chat");
+  }
+
+  res
+    .status(201)
+    .json(new ApiResponse(201, "Chat created successfully", newChat));
+});
+
 export {
   getAllUserChats,
   getChatMessages,
   sendChatMessage,
+  createNewChat,
   getFilesInChat,
   uploadFileToChat,
 };

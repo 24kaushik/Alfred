@@ -23,12 +23,12 @@ import authRouter from "./router/auth.route";
 import userRouter from "./router/user.route";
 import chatRouter from "./router/chat.route";
 
-app.use(
-  expressRateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 30, // Limit each IP to 30 requests per windowMs
-  }),
-);
+// app.use(
+//   expressRateLimit({
+//     windowMs: 1 * 60 * 1000, // 1 minute
+//     max: 30, // Limit each IP to 30 requests per windowMs
+//   }),
+// );
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/user", userRouter);

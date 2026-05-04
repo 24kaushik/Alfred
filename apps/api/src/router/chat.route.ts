@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  createNewChat,
   getAllUserChats,
   getChatMessages,
   getFilesInChat,
@@ -14,15 +15,11 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
   },
-  filename: (
-    req,
-    file,
-    cb, 
-  ) => {
+  filename: (req, file, cb) => {
     cb(null, file.originalname);
   },
 });
-const upload = multer({storage});
+const upload = multer({ storage });
 
 const chatRouter: Router = Router();
 
@@ -42,16 +39,7 @@ chatRouter.post(
   sendChatMessage,
 );
 
-chatRouter.post(
-  "/",
-  [
-    body("message").isString().withMessage("Message must be a string"),
-    body("type")
-      .isIn(["chat", "studychat"])
-      .withMessage("Type must be either 'chat' or 'studychat'"),
-  ],
-  sendChatMessage,
-); // also create a new chat if chatId is not provided
+chatRouter.post("/", createNewChat);
 
 chatRouter.get(
   "/files/:chatId",
