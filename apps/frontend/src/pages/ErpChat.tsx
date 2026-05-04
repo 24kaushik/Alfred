@@ -133,136 +133,156 @@ const ErpChat = () => {
   const activeThread = threads.find((thread) => thread.id === selectedChatId);
 
   const sendMessage = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    const messageText = inputValue.trim();
-    if (!messageText || isSending) {
-      return;
-    }
+  const messageText = inputValue.trim();
+  if (!messageText || isSending) return;
 
-    if (!selectedChatId) {
-      setError("Select a chat first.");
-      return;
-    }
+  if (!selectedChatId) {
+    setError("Select a chat first.");
+    return;
+  }
 
-    setInputValue("");
-    setError(null);
-    setIsSending(true);
+  setInputValue("");
+  setError(null);
+  setIsSending(true);
 
-    const nowIso = new Date().toISOString();
-    const studentMessageId = crypto.randomUUID();
-    const assistantMessageId = crypto.randomUUID();
+  const nowIso = new Date().toISOString();
+  const studentMessageId = crypto.randomUUID();
+  const assistantMessageId = crypto.randomUUID();
 
-    const selectedThread = threads.find(
-      (thread) => thread.id === selectedChatId,
-    );
+  const selectedThread = threads.find(
+    (thread) => thread.id === selectedChatId,
+  );
 
-    setThreads((current) =>
-      current.map((thread) =>
-        thread.id === selectedChatId
-          ? {
-              ...thread,
-              updatedAt: nowIso,
-              messages: [
-                ...thread.messages,
-                {
-                  id: studentMessageId,
-                  sender: "STUDENT",
-                  content: messageText,
-                  timestamp: formatMessageTimestamp(nowIso),
-                },
-                {
-                  id: assistantMessageId,
-                  sender: "AGENT",
-                  content: "",
-                  timestamp: formatMessageTimestamp(nowIso),
-                },
-              ],
-            }
-          : thread,
-      ),
-    );
-
-    try {
-      const isDraft = Boolean(selectedThread?.isDraft);
-      const chatId = isDraft ? null : selectedChatId;
-      const stream = await sendChatMessage(chatId, messageText);
-      setLoadedChatIds((current) => {
-        const next = new Set(current);
-        if (chatId) {
-          next.add(chatId);
-        }
-        return next;
-      });
-      const reader = stream.getReader();
-      const decoder = new TextDecoder("utf-8");
-      let buffer = "";
-      let streamedContent = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-          break;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          if (!line.startsWith("data:")) {
-            continue;
+  setThreads((current) =>
+    current.map((thread) =>
+      thread.id === selectedChatId
+        ? {
+            ...thread,
+            updatedAt: nowIso,
+            messages: [
+              ...thread.messages,
+              {
+                id: studentMessageId,
+                sender: "STUDENT",
+                content: messageText,
+                timestamp: formatMessageTimestamp(nowIso),
+              },
+              {
+                id: assistantMessageId,
+                sender: "AGENT",
+                content: "",
+                timestamp: formatMessageTimestamp(nowIso),
+                isStreaming: true,
+              },
+            ],
           }
+        : thread,
+    ),
+  );
 
-          const rawData = line.slice(5);
-          const token = (
-            rawData.startsWith(" ") ? rawData.slice(1) : rawData
-          ).replace(/\r$/, "");
-          streamedContent += token;
+  try {
+    const isDraft = Boolean(selectedThread?.isDraft);
+    const chatId = isDraft ? null : selectedChatId;
 
-          setThreads((current) =>
-            current.map((thread) =>
-              thread.id === selectedChatId
-                ? {
-                    ...thread,
-                    messages: thread.messages.map((message) =>
-                      message.id === assistantMessageId
-                        ? { ...message, content: streamedContent }
-                        : message,
-                    ),
-                  }
-                : thread,
-            ),
-          );
+    const stream = await sendChatMessage(chatId, messageText);
+
+    const reader = stream.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    let buffer = "";
+    let streamedContent = "";
+    let pending = "";
+    let lastFlush = Date.now();
+
+    const currentChatId = selectedChatId; // prevent stale updates
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+
+        const raw = line.replace(/^data:\s*/, "").trim();
+
+        if (raw === "[DONE]") {
+          flush();
+          finalize();
+          return;
         }
+
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.token) {
+            pending += parsed.token;
+          }
+        } catch {}
       }
 
-      if (isDraft) {
-        await loadChats();
+      if (Date.now() - lastFlush > 50) {
+        flush();
       }
-    } catch {
-      setError("Message failed to send.");
+    }
+
+    flush();
+    finalize();
+
+    function flush() {
+      if (!pending) return;
+
+      streamedContent += pending;
+      pending = "";
+      lastFlush = Date.now();
+
       setThreads((current) =>
         current.map((thread) =>
-          thread.id === selectedChatId
+          thread.id === currentChatId
             ? {
                 ...thread,
                 messages: thread.messages.map((message) =>
                   message.id === assistantMessageId
-                    ? {
-                        ...message,
-                        content: "I could not generate a reply. Please retry.",
-                      }
+                    ? { ...message, content: streamedContent }
                     : message,
                 ),
               }
             : thread,
         ),
       );
-    } finally {
-      setIsSending(false);
     }
-  };
+
+    function finalize() {
+      setThreads((current) =>
+        current.map((thread) =>
+          thread.id === currentChatId
+            ? {
+                ...thread,
+                messages: thread.messages.map((message) =>
+                  message.id === assistantMessageId
+                    ? { ...message, isStreaming: false }
+                    : message,
+                ),
+              }
+            : thread,
+        ),
+      );
+    }
+
+    if (isDraft) {
+      await loadChats();
+    }
+  } catch {
+    setError("Message failed to send.");
+  } finally {
+    setIsSending(false);
+  }
+};
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">

@@ -3,6 +3,7 @@ type ChatMessage = {
   sender: "STUDENT" | "AGENT";
   content: string;
   timestamp: string;
+  isStreaming?: boolean;
 };
 
 type ChatThread = {

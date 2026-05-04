@@ -1,4 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { Components } from "react-markdown";
 import type { ChatThread } from "../pages/erp-chat/types";
 
 type ChatMainProps = {
@@ -16,6 +19,116 @@ const ChatMain = ({
   onChange,
   onSubmit,
 }: ChatMainProps) => {
+  const markdownComponents = useMemo<Components>(
+    () => ({
+      p: ({ children, ...props }) => (
+        <p className="mb-2 last:mb-0" {...props}>
+          {children}
+        </p>
+      ),
+      ul: ({ children, ...props }) => (
+        <ul
+          className="mb-2 list-inside list-disc space-y-1 last:mb-0"
+          {...props}
+        >
+          {children}
+        </ul>
+      ),
+      ol: ({ children, ...props }) => (
+        <ol
+          className="mb-2 list-inside list-decimal space-y-1 last:mb-0"
+          {...props}
+        >
+          {children}
+        </ol>
+      ),
+      li: ({ children, ...props }) => <li {...props}>{children}</li>,
+      code: ({ className, children, ...props }) => (
+        <code
+          className={`rounded bg-slate-200 px-1.5 py-0.5 font-mono text-xs ${
+            className || ""
+          }`}
+          {...props}
+        >
+          {children}
+        </code>
+      ),
+      pre: ({ children, ...props }) => (
+        <pre
+          className="mb-2 overflow-x-auto rounded bg-slate-200 p-2 last:mb-0"
+          {...props}
+        >
+          {children}
+        </pre>
+      ),
+      strong: ({ children, ...props }) => (
+        <strong className="font-semibold" {...props}>
+          {children}
+        </strong>
+      ),
+      em: ({ children, ...props }) => (
+        <em className="italic" {...props}>
+          {children}
+        </em>
+      ),
+      h1: ({ children, ...props }) => (
+        <h1 className="mb-2 text-base font-bold last:mb-0" {...props}>
+          {children}
+        </h1>
+      ),
+      h2: ({ children, ...props }) => (
+        <h2 className="mb-2 text-sm font-bold last:mb-0" {...props}>
+          {children}
+        </h2>
+      ),
+      h3: ({ children, ...props }) => (
+        <h3 className="mb-2 text-sm font-semibold last:mb-0" {...props}>
+          {children}
+        </h3>
+      ),
+      table: ({ children, ...props }) => (
+        <div className="mb-2 overflow-x-auto rounded border border-slate-300 last:mb-0">
+          <table className="w-full border-collapse" {...props}>
+            {children}
+          </table>
+        </div>
+      ),
+      thead: ({ children, ...props }) => (
+        <thead className="bg-slate-200" {...props}>
+          {children}
+        </thead>
+      ),
+      tbody: ({ children, ...props }) => <tbody {...props}>{children}</tbody>,
+      tr: ({ children, ...props }) => (
+        <tr className="border-b border-slate-300" {...props}>
+          {children}
+        </tr>
+      ),
+      th: ({ children, ...props }) => (
+        <th
+          className="border border-slate-300 px-3 py-2 text-left font-semibold"
+          {...props}
+        >
+          {children}
+        </th>
+      ),
+      td: ({ children, ...props }) => (
+        <td className="border border-slate-300 px-3 py-2" {...props}>
+          {children}
+        </td>
+      ),
+      blockquote: ({ children, ...props }) => (
+        <blockquote
+          className="mb-2 border-l-4 border-slate-300 bg-slate-100 px-3 py-2 italic last:mb-0"
+          {...props}
+        >
+          {children}
+        </blockquote>
+      ),
+    }),
+    [],
+  );
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,7 +162,22 @@ const ChatMain = ({
                     : "bg-slate-100 text-slate-800"
                 }`}
               >
-                <p>{message.content}</p>
+                {message.sender === "AGENT" ? (
+                  message.isStreaming ? (
+                    <pre className="whitespace-pre-wrap font-sans">
+                      {message.content + "▍"}
+                    </pre>
+                  ) : (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={markdownComponents}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  )
+                ) : (
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                )}
                 <p
                   className={`mt-2 text-[10px] ${
                     message.sender === "STUDENT"

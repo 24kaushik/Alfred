@@ -122,6 +122,10 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
 
     res.flushHeaders();
 
+    const keepAlive = setInterval(() => {
+      res.write(": keep-alive\n\n");
+    }, 15000);
+
     await new Promise((resolve, reject) => {
       redisClient.subscribe(reqId, (err) => {
         if (err) return reject(err);
@@ -132,31 +136,39 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
 
         try {
           const msg = JSON.parse(message);
-          console.log(msg);
+
           if (msg.type === "error") {
-            redisClient.unsubscribe(reqId);
-            redisClient.off("message", listener);
-            return reject(
-              new Error(msg.data.message || "Unknown error from worker"),
+            res.write(
+              `data: ${JSON.stringify({ error: msg.data.message })}\n\n`,
             );
-          } else if (msg.type === "token") {
-            res.write(`data: ${msg.data}\n\n`);
-          } else if (msg.type === "end") {
-            redisClient.unsubscribe(reqId);
-            redisClient.off("message", listener);
+            cleanup();
+            return reject(new Error(msg.data.message));
+          }
+
+          if (msg.type === "token") {
+            res.write(`data: ${JSON.stringify({ token: msg.data })}\n\n`);
+          }
+
+          if (msg.type === "end") {
+            res.write(`data: [DONE]\n\n`);
+            cleanup();
             return resolve(true);
           }
-        } catch {
-          console.error("Failed to parse message:", message);
-          return;
+        } catch (e) {
+          console.error("Parse error:", message);
         }
+      };
+
+      const cleanup = () => {
+        clearInterval(keepAlive);
+        redisClient.unsubscribe(reqId);
+        redisClient.off("message", listener);
       };
 
       redisClient.on("message", listener);
 
       setTimeout(() => {
-        redisClient.unsubscribe(reqId);
-        redisClient.off("message", listener);
+        cleanup();
         reject(new Error("Timeout"));
       }, 30000);
     });
@@ -279,3 +291,5 @@ export {
   getFilesInChat,
   uploadFileToChat,
 };
+
+// TODO: dont give user control of sending messages to "chat", "studychat". create both chats separately. change in db and add chatType attribute.
