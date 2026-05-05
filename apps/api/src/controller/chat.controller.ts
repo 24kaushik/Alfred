@@ -20,12 +20,32 @@ const getAllUserChats: RequestHandler = expressAsyncHandler(
     const chats = await prisma.chat.findMany({
       where: {
         studentId: req.user.id,
+        type: "CHAT",
       },
     });
 
     res
       .status(200)
       .json(new ApiResponse(200, "Chats retrieved successfully", chats));
+  },
+);
+
+const getAllStudyChats: RequestHandler = expressAsyncHandler(
+  async (req, res) => {
+    if (!req.user || !req.user.id) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const chats = await prisma.chat.findMany({
+      where: {
+        studentId: req.user.id,
+        type: "STUDYCHAT",
+      },
+    });
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, "Study chats retrieved successfully", chats));
   },
 );
 
@@ -80,10 +100,10 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
     }
 
     let { chatId } = req.params;
-    const { message, type } = req.body as {
-      message: string;
-      type: "chat" | "studychat";
-    };
+    const { message, type } = req.body as { message: string; type: string };
+
+    let chatType: "CHAT" | "STUDYCHAT" =
+      type === "studychat" ? "STUDYCHAT" : "CHAT";
 
     if (chatId && typeof chatId === "string") {
       const chat = await prisma.chat.findFirst({
@@ -96,24 +116,20 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
       if (!chat) {
         throw new ApiError(404, "Chat not found");
       }
-    } else {
-      // Create new chat
-      const newChat = await prisma.chat.create({
-        data: {
-          studentId: req.user.id,
-        },
-      });
-      chatId = newChat.id;
+
+      chatType = chat.type;
     }
 
     const reqId = crypto.randomUUID();
+
+    const typeStr = chatType === "STUDYCHAT" ? "studychat" : "chat";
 
     AI_QUEUE.add("job", {
       message,
       chatId,
       userId: req.user.id,
       reqId,
-      type,
+      type: typeStr,
     });
 
     res.setHeader("Content-Type", "text/event-stream");
@@ -190,6 +206,9 @@ const uploadFileToChat: RequestHandler = expressAsyncHandler(
       where: { id: chatId, studentId: req.user?.id },
     });
     if (!chat) throw new ApiError(404, "Chat not found");
+    if (chat.type !== "STUDYCHAT") {
+      throw new ApiError(400, "File upload not allowed in this chat");
+    }
 
     if (!req.file) {
       throw new ApiError(400, "No file uploaded");
@@ -283,6 +302,29 @@ const createNewChat: RequestHandler = expressAsyncHandler(async (req, res) => {
     .json(new ApiResponse(201, "Chat created successfully", newChat));
 });
 
+const createNewStudyChat: RequestHandler = expressAsyncHandler(
+  async (req, res) => {
+    if (!req.user || !req.user.id) {
+      throw new ApiError(401, "Unauthorized");
+    }
+
+    const newChat = await prisma.chat.create({
+      data: {
+        studentId: req.user.id,
+        type: "STUDYCHAT",
+      },
+    });
+
+    if (!newChat) {
+      throw new ApiError(500, "Failed to create study chat");
+    }
+
+    res
+      .status(201)
+      .json(new ApiResponse(201, "Study chat created successfully", newChat));
+  },
+);
+
 export {
   getAllUserChats,
   getChatMessages,
@@ -290,6 +332,6 @@ export {
   createNewChat,
   getFilesInChat,
   uploadFileToChat,
+  getAllStudyChats,
+  createNewStudyChat,
 };
-
-// TODO: dont give user control of sending messages to "chat", "studychat". create both chats separately. change in db and add chatType attribute.

@@ -6,6 +6,8 @@ import {
   getFilesInChat,
   sendChatMessage,
   uploadFileToChat,
+  createNewStudyChat,
+  getAllStudyChats,
 } from "../controller/chat.controller";
 import { userAuthMiddleware } from "../middleware/userAuth.middleware";
 import { body, param, query } from "express-validator";
@@ -27,6 +29,7 @@ chatRouter.use(userAuthMiddleware);
 
 chatRouter.get("/", getAllUserChats);
 chatRouter.get("/:chatId", getChatMessages);
+chatRouter.get("/studychats", getAllStudyChats);
 
 chatRouter.post(
   "/:chatId",
@@ -40,6 +43,7 @@ chatRouter.post(
 );
 
 chatRouter.post("/", createNewChat);
+chatRouter.post("/studychats", createNewStudyChat);
 
 chatRouter.get(
   "/files/:chatId",
