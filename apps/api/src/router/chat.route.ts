@@ -28,8 +28,9 @@ const chatRouter: Router = Router();
 chatRouter.use(userAuthMiddleware);
 
 chatRouter.get("/", getAllUserChats);
-chatRouter.get("/:chatId", getChatMessages);
 chatRouter.get("/studychats", getAllStudyChats);
+chatRouter.get("/:chatId", getChatMessages);
+chatRouter.post("/studychat", createNewStudyChat);
 
 chatRouter.post(
   "/:chatId",
@@ -43,7 +44,6 @@ chatRouter.post(
 );
 
 chatRouter.post("/", createNewChat);
-chatRouter.post("/studychats", createNewStudyChat);
 
 chatRouter.get(
   "/files/:chatId",
