@@ -186,7 +186,7 @@ const sendChatMessage: RequestHandler = expressAsyncHandler(
       setTimeout(() => {
         cleanup();
         reject(new Error("Timeout"));
-      }, 30000);
+      }, 60000);
     });
 
     res.end();

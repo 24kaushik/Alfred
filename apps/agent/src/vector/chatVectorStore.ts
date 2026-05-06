@@ -19,12 +19,21 @@ export async function addChatDocuments(content: Document[], chatId: string) {
   );
 }
 
-export async function searchChatDocuments(query: string, chatId: string, k = 5) {
+export async function searchChatDocuments(
+  query: string,
+  chatId: string,
+  k = 5,
+) {
   const store = await getChatStore();
   const retriever = store.asRetriever({
     k: 5,
     filter: {
-      must: [{ key: "chat_id", match: { value: chatId } }],
+      must: [
+        {
+          key: "metadata.chatId",
+          match: { value: chatId },
+        },
+      ],
     },
   });
   const searchResults = await retriever.invoke(query);

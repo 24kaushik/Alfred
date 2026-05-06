@@ -13,7 +13,6 @@ const ChatRagLogic = async ({
   chatId,
 }: z.infer<typeof ChatRagInputSchema> & { chatId: string }) => {
   const searchResults = await searchChatDocuments(query, chatId);
-  console.log("here")
   if (searchResults.length === 0) {
     return "No relevant information found in the uploaded files.";
   }
@@ -37,6 +36,6 @@ const wrapChatRagLogic = (toolFn: Function) => {
 export const ChatRagTool = tool(wrapChatRagLogic(ChatRagLogic), {
   name: "chat-rag-tool",
   description:
-    "A tool to retrieve info from the files uploaded by the user in this chat.",
+    "A tool to retrieve info from the files uploaded by the user in this chat. write a well query that might be present in the file to get the best results. dont send filename etc in the query, just the content you want to search",
   schema: ChatRagInputSchema,
 });
