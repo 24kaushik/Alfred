@@ -51,7 +51,7 @@ export const studyAgentController: RequestHandler = expressAsyncHandler(
 
     for await (const [token, metadata] of await StudyHelpAgent.stream(
       { messages: allMessages },
-      { configurable: { userId }, streamMode: "messages" },
+      { configurable: { userId, chatId }, streamMode: "messages" },
     )) {
       const tokenContent = token.contentBlocks[0]?.text || "";
       res.write(tokenContent);

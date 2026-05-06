@@ -37,9 +37,29 @@ const fetchMessages = async (chatId: string) => {
   return payload.data ?? [];
 };
 
-const sendChatMessage = async (chatId: string | null, message: string) => {
-  const targetUrl = chatId ? `${CHAT_BASE_URL}/${chatId}` : CHAT_BASE_URL;
-  const response = await fetch(targetUrl, {
+const createChat = async () => {
+  const response = await fetch(CHAT_BASE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to create chat");
+  }
+
+  const payload = (await response.json()) as ApiResponse<ChatDto>;
+  if (!payload.data) {
+    throw new Error("Invalid chat response");
+  }
+
+  return payload.data;
+};
+
+const sendChatMessage = async (chatId: string, message: string) => {
+  const response = await fetch(`${CHAT_BASE_URL}/${chatId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,4 +74,4 @@ const sendChatMessage = async (chatId: string | null, message: string) => {
 
   return response.body;
 };
-export { fetchChats, fetchMessages, sendChatMessage };
+export { createChat, fetchChats, fetchMessages, sendChatMessage };

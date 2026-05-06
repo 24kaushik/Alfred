@@ -5,10 +5,11 @@ import {
   GetAllSubjectsIDTool,
   GetSyllabusTool,
 } from "../tools/erp/getSyllabus.tool";
+import { ChatRagTool } from "../tools/rag/chatRag.tool";
 
 const StudyHelpAgent = createAgent({
   model: GPTOSS_120B,
-  tools: [RetrieveQuestionPapersTool, GetAllSubjectsIDTool, GetSyllabusTool],
+  tools: [RetrieveQuestionPapersTool, GetAllSubjectsIDTool, GetSyllabusTool, ChatRagTool],
 });
 
 export default StudyHelpAgent;

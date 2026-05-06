@@ -4,26 +4,38 @@ import ChatSideBar from "../components/chatSideBar";
 import type { ChatSummary } from "../components/chatSideBar";
 import {
   createChat,
+  fetchChatFiles,
   fetchChats,
   fetchMessages,
   sendChatMessage,
-} from "./erp-chat/chatApi";
+  uploadChatFile,
+} from "./studyMate/chatApi";
 import {
   formatChatTimestamp,
   formatMessageTimestamp,
-} from "./erp-chat/formatters";
-import type { ChatThread } from "./erp-chat/types";
+} from "./studyMate/formatters";
+import type { ChatFile, ChatThread } from "./studyMate/types";
 
-const ErpChat = () => {
+const StudyMate = () => {
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [isLoadingChats, setIsLoadingChats] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [loadedChatIds, setLoadedChatIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [loadedFileChatIds, setLoadedFileChatIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [filesByChatId, setFilesByChatId] = useState<
+    Record<string, ChatFile[]>
+  >({});
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [selectedChatId, setSelectedChatId] = useState<string>("");
 
@@ -119,6 +131,44 @@ const ErpChat = () => {
     void loadMessages();
   }, [selectedChatId, loadedChatIds, threads]);
 
+  useEffect(() => {
+    const selectedThread = threads.find(
+      (thread) => thread.id === selectedChatId,
+    );
+
+    if (
+      !selectedChatId ||
+      selectedThread?.isDraft ||
+      loadedFileChatIds.has(selectedChatId)
+    ) {
+      return;
+    }
+
+    const loadFiles = async () => {
+      setIsLoadingFiles(true);
+      setFileError(null);
+
+      try {
+        const files = await fetchChatFiles(selectedChatId);
+        setFilesByChatId((current) => ({
+          ...current,
+          [selectedChatId]: files,
+        }));
+        setLoadedFileChatIds((current) => {
+          const next = new Set(current);
+          next.add(selectedChatId);
+          return next;
+        });
+      } catch {
+        setFileError("Could not load files.");
+      } finally {
+        setIsLoadingFiles(false);
+      }
+    };
+
+    void loadFiles();
+  }, [selectedChatId, loadedFileChatIds, threads]);
+
   const sidebarChats = useMemo<ChatSummary[]>(() => {
     return threads.map((thread) => {
       const lastMessage = thread.messages[thread.messages.length - 1];
@@ -136,6 +186,7 @@ const ErpChat = () => {
   }, [threads, isLoadingChats]);
 
   const activeThread = threads.find((thread) => thread.id === selectedChatId);
+  const activeFiles = filesByChatId[selectedChatId] ?? [];
 
   const sendMessage = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -187,6 +238,16 @@ const ErpChat = () => {
           next.delete(selectedChatId);
           next.add(newChat.id);
           return next;
+        });
+        setLoadedFileChatIds((current) => {
+          const next = new Set(current);
+          next.delete(selectedChatId);
+          next.add(newChat.id);
+          return next;
+        });
+        setFilesByChatId((current) => {
+          const { [selectedChatId]: _removed, ...rest } = current;
+          return { ...rest, [newChat.id]: [] };
         });
         setSelectedChatId(newChat.id);
       }
@@ -318,9 +379,118 @@ const ErpChat = () => {
     }
   };
 
+  const uploadFile = async () => {
+    if (!selectedChatId) {
+      setFileError("Select a chat first.");
+      return;
+    }
+
+    if (!selectedFile) {
+      setFileError("Choose a PDF to upload.");
+      return;
+    }
+
+    const isPdf =
+      selectedFile.type === "application/pdf" ||
+      selectedFile.name.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+      setFileError("Only PDF files are supported.");
+      return;
+    }
+
+    setFileError(null);
+    setIsUploadingFile(true);
+
+    let currentChatId = selectedChatId;
+    const uploadStartedAt = new Date().toISOString();
+
+    try {
+      const selectedThread = threads.find(
+        (thread) => thread.id === selectedChatId,
+      );
+
+      if (selectedThread?.isDraft) {
+        const newChat = await createChat();
+        currentChatId = newChat.id;
+
+        setThreads((current) =>
+          current.map((thread) =>
+            thread.id === selectedChatId
+              ? {
+                  ...thread,
+                  id: newChat.id,
+                  title: `Chat ${newChat.id.slice(0, 8)}`,
+                  updatedAt: newChat.updatedAt ?? newChat.createdAt,
+                  isDraft: false,
+                }
+              : thread,
+          ),
+        );
+        setLoadedChatIds((current) => {
+          const next = new Set(current);
+          next.delete(selectedChatId);
+          next.add(newChat.id);
+          return next;
+        });
+        setLoadedFileChatIds((current) => {
+          const next = new Set(current);
+          next.delete(selectedChatId);
+          next.add(newChat.id);
+          return next;
+        });
+        setFilesByChatId((current) => {
+          const { [selectedChatId]: _removed, ...rest } = current;
+          return { ...rest, [newChat.id]: [] };
+        });
+        setSelectedChatId(newChat.id);
+      }
+
+      await uploadChatFile(currentChatId, selectedFile);
+      await pollForProcessedFiles(currentChatId, uploadStartedAt);
+      setSelectedFile(null);
+    } catch {
+      setFileError("Upload failed.");
+    } finally {
+      setIsUploadingFile(false);
+    }
+  };
+
+  const pollForProcessedFiles = async (
+    chatId: string,
+    uploadedAfter: string,
+  ) => {
+    const maxAttempts = 30;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const files = await fetchChatFiles(chatId);
+      setFilesByChatId((current) => ({
+        ...current,
+        [chatId]: files,
+      }));
+      setLoadedFileChatIds((current) => {
+        const next = new Set(current);
+        next.add(chatId);
+        return next;
+      });
+
+      const uploadedAfterTime = Date.parse(uploadedAfter);
+      const processed = files.some((file) => {
+        const createdTime = Date.parse(file.createdAt);
+        return createdTime >= uploadedAfterTime && file.status === "PROCESSED";
+      });
+
+      if (processed) {
+        return;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  };
+
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
-      <div className="mx-auto grid h-full min-h-[calc(100vh-6rem)] w-full max-w-7xl gap-4 lg:grid-cols-[320px_1fr]">
+    <div className="h-[calc(100vh-4rem)] bg-slate-50 px-3 py-4 sm:px-6 sm:py-6">
+      <div className="mx-auto grid h-[calc(100vh-6rem)] w-full max-w-7xl gap-4 lg:grid-cols-[320px_1fr]">
         <ChatSideBar
           chats={sidebarChats}
           selectedChatId={selectedChatId}
@@ -343,21 +513,95 @@ const ErpChat = () => {
           }}
         />
 
-        <ChatMain
-          activeThread={
-            isLoadingMessages && activeThread
-              ? { ...activeThread, messages: [] }
-              : activeThread
-          }
-          inputValue={inputValue}
-          isSending={isSending}
-          onChange={setInputValue}
-          onSubmit={sendMessage}
-        />
+        <div className="flex h-full min-h-0 flex-col gap-4">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <ChatMain
+              activeThread={
+                isLoadingMessages && activeThread
+                  ? { ...activeThread, messages: [] }
+                  : activeThread
+              }
+              inputValue={inputValue}
+              isSending={isSending}
+              onChange={setInputValue}
+              onSubmit={sendMessage}
+            />
+          </div>
+          <section className="shrink-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">
+                  Files
+                </h2>
+                <p className="text-xs text-slate-500">
+                  PDFs uploaded to this study chat.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(event) =>
+                      setSelectedFile(event.target.files?.[0] ?? null)
+                    }
+                    disabled={isUploadingFile}
+                  />
+                  {selectedFile ? "Change PDF" : "Choose PDF"}
+                </label>
+                <button
+                  type="button"
+                  onClick={uploadFile}
+                  disabled={isUploadingFile || !selectedFile}
+                  className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                >
+                  {isUploadingFile ? "Uploading" : "Upload"}
+                </button>
+              </div>
+            </div>
+            {selectedFile ? (
+              <p className="mt-2 text-xs text-slate-600">
+                Selected: {selectedFile.name}
+              </p>
+            ) : null}
+            {fileError ? (
+              <p className="mt-2 text-xs text-red-600">{fileError}</p>
+            ) : null}
+            <div className="mt-4">
+              {isLoadingFiles ? (
+                <p className="text-xs text-slate-500">Loading files...</p>
+              ) : activeFiles.length ? (
+                <div className="flex gap-3 overflow-x-auto pb-2">
+                  {activeFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex h-32 w-32 flex-shrink-0 flex-col justify-between rounded-2xl border border-slate-200 p-3 text-xs"
+                    >
+                      <div className="min-w-0">
+                        <p className="line-clamp-2 font-semibold text-slate-800">
+                          {file.fileName.split("/").pop()}
+                        </p>
+                        <p className="mt-1 text-[10px] text-slate-500">
+                          {new Date(file.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className="self-start rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600">
+                        {file.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">No files yet.</p>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
       {error ? <p className="mt-3 text-xs text-red-600">{error}</p> : null}
     </div>
   );
 };
 
-export default ErpChat;
+export default StudyMate;

@@ -19,7 +19,7 @@ export async function addChatDocuments(content: Document[], chatId: string) {
   );
 }
 
-export async function searchChatMessages(query: string, chatId: string, k = 5) {
+export async function searchChatDocuments(query: string, chatId: string, k = 5) {
   const store = await getChatStore();
   const retriever = store.asRetriever({
     k: 5,

@@ -3,6 +3,7 @@ import "./App.css";
 import Navbar from "./components/Navbar";
 import ErpChat from "./pages/ErpChat";
 import Login from "./pages/Login";
+import StudyMate from "./pages/StudyMate";
 
 const App = () => {
   return (
@@ -13,6 +14,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Login />} />
         <Route path="/erp-chat" element={<ErpChat />} />
+        <Route path="/studymate" element={<StudyMate />} />
       </Routes>
     </Router>
   );
