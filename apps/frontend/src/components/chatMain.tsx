@@ -136,7 +136,7 @@ const ChatMain = ({
   }, [activeThread?.id, activeThread?.messages.length]);
 
   return (
-    <section className="flex min-h-0 flex-col rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <section className="flex h-full min-h-0 flex-col rounded-3xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 px-4 py-3 sm:px-6">
         <h1 className="text-base font-semibold text-slate-900 sm:text-lg">
           {activeThread?.title ?? "Select a chat"}
