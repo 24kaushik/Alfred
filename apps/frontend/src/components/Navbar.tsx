@@ -1,18 +1,41 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
+import { checkAuth, logout as logoutUser } from "../utils/auth";
+
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  qid?: string;
+}
 
 const navigationLinks = [
   { label: "ERP Chat", to: "/erp-chat" },
   { label: "StudyMate", to: "/studymate" },
 ];
 
-const actionLinks = [
-  { label: "Continue with Google", to: "/login", variant: "solid" as const },
-  { label: "Profile", to: "/profile", variant: "ghost" as const },
-];
-
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUserAuth = async () => {
+      const authenticatedUser = await checkAuth();
+      setUser(authenticatedUser);
+      setLoading(false);
+    };
+
+    checkUserAuth();
+  }, []);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    setUser(null);
+    setMenuOpen(false);
+    navigate("/login");
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/75 backdrop-blur-xl">
@@ -48,24 +71,28 @@ const Navbar = () => {
         </nav>
 
         <div className="hidden items-center gap-2 sm:flex">
-          {actionLinks.map((item) =>
-            item.variant === "solid" ? (
+          {!loading && user ? (
+            <>
               <Link
-                key={item.label}
-                to={item.to}
-                className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.15)] transition-transform duration-300 hover:-translate-y-0.5"
-              >
-                {item.label}
-              </Link>
-            ) : (
-              <Link
-                key={item.label}
-                to={item.to}
+                to="/profile"
                 className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
               >
-                {item.label}
+                Profile
               </Link>
-            ),
+              <button
+                onClick={handleLogout}
+                className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.15)] transition-transform duration-300 hover:-translate-y-0.5"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.15)] transition-transform duration-300 hover:-translate-y-0.5"
+            >
+              Sign In
+            </Link>
           )}
         </div>
 
@@ -100,26 +127,30 @@ const Navbar = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-2 pt-2">
-              {actionLinks.map((item) =>
-                item.variant === "solid" ? (
+              {!loading && user ? (
+                <>
                   <Link
-                    key={item.label}
-                    to={item.to}
-                    onClick={() => setMenuOpen(false)}
-                    className="rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white"
-                  >
-                    {item.label}
-                  </Link>
-                ) : (
-                  <Link
-                    key={item.label}
-                    to={item.to}
+                    to="/profile"
                     onClick={() => setMenuOpen(false)}
                     className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700"
                   >
-                    {item.label}
+                    Profile
                   </Link>
-                ),
+                  <button
+                    onClick={handleLogout}
+                    className="rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white"
+                >
+                  Sign In
+                </Link>
               )}
             </div>
           </div>

@@ -1,15 +1,36 @@
 import { useGoogleLogin } from "@react-oauth/google";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { checkAuth } from "../utils/auth";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:6969";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if already logged in
+    const checkAndRedirect = async () => {
+      const user = await checkAuth();
+      if (user) {
+        // If user has QID, redirect to erp-chat, otherwise to profile
+        if (user.qid) {
+          navigate("/erp-chat");
+        } else {
+          navigate("/profile");
+        }
+      }
+    };
+    checkAndRedirect();
+  }, [navigate]);
 
   const handleGoogleLogin = useGoogleLogin({
     flow: "auth-code",
     onSuccess: async (credentialResponse) => {
       setLoading(true);
+      setError(null);
       try {
         // Send authorization code to backend, which exchanges it and sets auth cookie.
         const response = await fetch(`${API_BASE_URL}/api/v1/auth/google`, {
@@ -20,16 +41,23 @@ const Login = () => {
         });
 
         if (response.ok) {
-          window.location.href = "/erp-chat";
+          // Redirect to profile to set QID and password
+          setTimeout(() => {
+            navigate("/profile");
+          }, 500);
+        } else {
+          setError("Login failed. Please try again.");
         }
       } catch (error) {
         console.error("Login error:", error);
+        setError("Login failed. Please try again.");
       } finally {
         setLoading(false);
       }
     },
     onError: () => {
       console.error("Login Failed");
+      setError("Google login failed. Please try again.");
     },
   });
 
@@ -168,6 +196,12 @@ const Login = () => {
                       </>
                     )}
                   </button>
+
+                  {error && (
+                    <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      {error}
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
