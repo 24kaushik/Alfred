@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { getUserInfo, updateERPCredentials, checkAuth } from "../utils/auth";
+import {  updateERPCredentials, checkAuth } from "../utils/auth";
 
 interface UserProfile {
   id: string;
@@ -269,7 +269,7 @@ const Profile = () => {
               <div className="mt-8 border-t border-slate-200 pt-6">
                 <div className="rounded-2xl border border-blue-200/50 bg-blue-50/50 px-4 py-4 backdrop-blur-sm">
                   <div className="flex gap-3">
-                    <div className="flex-shrink-0 text-lg">ℹ️</div>
+                    <div className="shrink-0 text-lg">ℹ️</div>
                     <div>
                       <p className="text-sm font-semibold text-slate-950">
                         Why we need this

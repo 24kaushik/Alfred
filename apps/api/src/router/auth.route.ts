@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { googleOAuth } from "../controller/auth.controller";
+import { googleOAuth, logout } from "../controller/auth.controller";
 import { body } from "express-validator";
 
 const router: Router = Router();
@@ -9,5 +9,6 @@ router.post(
   body("code").notEmpty().withMessage("code is required"),
   googleOAuth,
 );
+router.post("/logout", logout);
 
 export default router;

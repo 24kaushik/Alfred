@@ -17,9 +17,9 @@ const Login = () => {
       if (user) {
         // If user has QID, redirect to erp-chat, otherwise to profile
         if (user.qid) {
-          navigate("/erp-chat");
+          window.location.href = "/erp-chat";
         } else {
-          navigate("/profile");
+          window.location.href = "/profile";
         }
       }
     };
@@ -43,7 +43,7 @@ const Login = () => {
         if (response.ok) {
           // Redirect to profile to set QID and password
           setTimeout(() => {
-            navigate("/profile");
+            window.location.href = "/profile";
           }, 500);
         } else {
           setError("Login failed. Please try again.");
