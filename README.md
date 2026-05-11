@@ -218,6 +218,17 @@ pnpm --filter @alfred/db dev:migrate
 pnpm dev
 ```
 
+### Docker Development
+
+The Docker stack runs built output, not live source files. If you add or change code in one service, rebuild only that service image and restart that container:
+
+```bash
+docker compose -f docker/docker-compose.yml build api
+docker compose -f docker/docker-compose.yml up -d api
+```
+
+If the change touches a shared package like `packages/db`, `packages/redis`, `packages/queue`, or `packages/utils`, rebuild every service that depends on it.
+
 Run individual services:
 
 ```bash
