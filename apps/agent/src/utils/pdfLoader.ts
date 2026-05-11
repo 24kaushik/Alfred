@@ -1,6 +1,10 @@
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const QP_DIR_PATH = path.resolve(__dirname, "../../rag_data/question_papers");
 

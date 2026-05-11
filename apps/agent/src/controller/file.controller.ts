@@ -7,6 +7,10 @@ import { loadFileFromTmp } from "../utils/pdfLoader";
 import { addChatDocuments } from "../vector/chatVectorStore";
 import { prisma, redisClient } from "../config/db.config";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const saveFile: RequestHandler = expressAsyncHandler(
   async (req: Request, res: Response) => {

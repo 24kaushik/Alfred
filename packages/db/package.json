@@ -2,17 +2,16 @@
   "name": "@alfred/db",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "prisma": "prisma",
     "generate": "prisma generate",
-    
     "dev:migrate": "dotenv -e ../../.env -- prisma migrate dev",
     "dev:studio": "dotenv -e ../../.env -- prisma studio",
     "dev:push": "dotenv -e ../../.env -- prisma db push",
-
-    "deploy:migrate": "prisma migrate deploy"
+    "deploy:migrate": "dotenv -e ../../.env -- prisma migrate deploy",
+    "build": "tsup src/index.ts --format cjs --dts --out-dir dist"
   },
   "keywords": [],
   "author": "",

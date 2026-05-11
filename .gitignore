@@ -139,3 +139,6 @@ uploads/
 
 # ignore tesseract trained data
 *.traineddata
+
+.env.docker
+.env.docker.frontend

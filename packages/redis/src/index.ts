@@ -1,2 +1,2 @@
-export { createRedisClient } from "./client";
+export { createRedisClient } from "./client.js";
 export * from "ioredis";
