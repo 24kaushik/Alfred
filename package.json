@@ -10,7 +10,7 @@
     "dev:agent": "pnpm --filter @alfred/agent dev",
     "dev:worker": "pnpm --filter @alfred/worker dev",
     "dev": "pnpm -r --parallel --no-bail dev",
-    "build" : "pnpm -r --parallel --no-bail build"
+    "build": "pnpm -r --parallel --no-bail build"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
   "homepage": "https://github.com/24kaushik/Alfred#readme",
   "devDependencies": {
     "@types/node": "^25.2.3",
+    "prisma": "^6.19.3",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3"
