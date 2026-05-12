@@ -67,7 +67,7 @@ const capabilities = [
 
 const stats = [
   { label: "Universities", value: "1" },
-  { label: "Features", value: "2+" },
+  { label: "Features", value: "Many" },
   { label: "AI Models", value: "2" },
 ];
 
